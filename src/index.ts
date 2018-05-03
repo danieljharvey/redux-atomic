@@ -42,3 +42,5 @@ export function createAtomicReducer<a>(reducerKey: string, initialState: a) {
 
 // getState is just dispatch with identity function
 // subscribe is .. ? maybe?
+
+// allow autonaming of reducerKey if user doesn't give a shit

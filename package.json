@@ -1,6 +1,6 @@
 {
   "name": "redux-atomic",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A nice new way to do actions",
   "main": "dist/index.js",
   "repository": "github.com/danieljharvey/redux-atomic",

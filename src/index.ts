@@ -16,8 +16,10 @@ export const REDUX_ATOMIC_ACTION = 'reduxAtomic/REDUX_ATOMIC_ACTION'
 
 export interface AtomicAction<a> {
     type: typeof REDUX_ATOMIC_ACTION
-    key: object
-    change: AtomicReducerFunction<a>
+    meta: {
+        key: object
+        change: AtomicReducerFunction<a>
+    }
 }
 
 export function createAtomicDispatch<a>(identifier: object): AtomicDispatcher<a> {
@@ -25,8 +27,10 @@ export function createAtomicDispatch<a>(identifier: object): AtomicDispatcher<a>
         return <a>(func: AtomicReducerFunction<a>): void => {
             dispatch<AtomicAction<a>>({
                 type: REDUX_ATOMIC_ACTION,
-                key: identifier,
-                change: func
+                meta: {
+                    key: identifier,
+                    change: func
+                }
             })
         }
     }
@@ -35,7 +39,11 @@ export function createAtomicDispatch<a>(identifier: object): AtomicDispatcher<a>
 export function createAtomicReducer<a>(initialState: a, identifier: object) {
     return (state: a, action: AtomicAction<a>): a => {
         const thisState = state || initialState
-        return (action.key === identifier && action.type === REDUX_ATOMIC_ACTION) ? action.change(thisState) : thisState
+        return (
+            action.meta &&
+            action.meta.key === identifier &&
+            action.type === REDUX_ATOMIC_ACTION
+        ) ? action.meta.change(thisState) : thisState
     }
 }
 

@@ -31,9 +31,9 @@ const initialAtomicState2: AtomicState2 = {
     headerTitle: ""
 }
 
-const atomic1 = createAtomic<AtomicState>("one", initialAtomicState)
-const atomicOne = createAtomic<AtomicState>("bum", initialAtomicState)
-const atomic2 = createAtomic<AtomicState2>("two", initialAtomicState2)
+const atomic1 = createAtomic<AtomicState>(initialAtomicState)
+const atomicOne = createAtomic<AtomicState>(initialAtomicState)
+const atomic2 = createAtomic<AtomicState2>(initialAtomicState2)
 
 const sampleApp = combineReducers<any>({
     atomicStore: atomic1.reducer,
@@ -61,18 +61,9 @@ describe("We're testing this approach", () => {
         expect(state.atomicStore.title).toEqual("Shitter")
     })
 
-    it("Uses the reducer on it's own", () => {
-        const testFace = createAtomic<number>("flap", 0)
-
-        const output = testFace.reducer(0, { type: REDUX_ATOMIC_ACTION, key: "flap", change: increment })
-        const output2 = testFace.reducer(output, { type: REDUX_ATOMIC_ACTION, key: "some other", change: increment })
-
-        expect(output2).toEqual(1)
-    })
-
     it("Similar stores don't mess with one another", () => {
         let store = createStore(sampleApp)
-        
+
         const dispatchOne = atomic1.decorateDispatcher(store.dispatch)
         const dispatchTwo = atomicOne.decorateDispatcher(store.dispatch)
 

@@ -2,7 +2,7 @@
   "name": "redux-atomic",
   "version": "0.0.1",
   "description": "A nice new way to do actions",
-  "main": "index.js",
+  "main": "dist/index.js",
   "repository": "github.com/danieljharvey/redux-atomic",
   "author": "Daniel J Harvey",
   "license": "MIT",

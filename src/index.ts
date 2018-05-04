@@ -1,12 +1,17 @@
 import { Dispatch } from 'redux'
 
+interface Function {
+    name: string;
+}
+
 export type AtomicReducerFunction<a> = (state: a) => a
-export type AtomicDispatcher<a> = (dispatch: Dispatch) => (func: AtomicReducerFunction<a>) => void
+export type AtomicActionCreator<a> = (func: AtomicReducerFunction<a>, funcName?: string) => AtomicAction<a>
 export type AtomicReducer<a> = (state: a, action: AtomicAction<a>) => a
 
 export interface Atomic<a> {
     reducer: AtomicReducer<a>
-    decorateDispatcher: AtomicDispatcher<a>
+    createAction: AtomicActionCreator<a>
+    identifier: string
 }
 export enum AtomicActionType {
     AtomicAction = 'ATOMIC_ACTION'
@@ -15,42 +20,59 @@ export enum AtomicActionType {
 export const REDUX_ATOMIC_ACTION = 'reduxAtomic/REDUX_ATOMIC_ACTION'
 
 export interface AtomicAction<a> {
-    type: typeof REDUX_ATOMIC_ACTION
+    type: string
     meta: {
-        key: object
+        id: typeof REDUX_ATOMIC_ACTION
+        key: string
         change: AtomicReducerFunction<a>
     }
 }
 
-export function createAtomicDispatch<a>(identifier: object): AtomicDispatcher<a> {
-    return function (dispatch: Dispatch) {
-        return <a>(func: AtomicReducerFunction<a>): void => {
-            dispatch<AtomicAction<a>>({
-                type: REDUX_ATOMIC_ACTION,
-                meta: {
-                    key: identifier,
-                    change: func
-                }
-            })
+export function createAtomicAction<a>(identifier: string): AtomicActionCreator<a> {
+    return <a>(func: AtomicReducerFunction<a>, funcName?: string): AtomicAction<a> => {
+        return {
+            type: generateKey(identifier, funcName),
+            meta: {
+                id: REDUX_ATOMIC_ACTION,
+                key: identifier,
+                change: func
+            }
         }
     }
 }
 
-export function createAtomicReducer<a>(initialState: a, identifier: object) {
+
+export function createAtomicReducer<a>(initialState: a, identifier: string) {
     return (state: a, action: AtomicAction<a>): a => {
         const thisState = state || initialState
         return (
             action.meta &&
             action.meta.key === identifier &&
-            action.type === REDUX_ATOMIC_ACTION
+            action.meta.id === REDUX_ATOMIC_ACTION
         ) ? action.meta.change(thisState) : thisState
     }
 }
 
 export function createAtomic<a>(initialState: a): Atomic<a> {
-    const identifier = {}
+    const identifier = guid()
     return {
         reducer: createAtomicReducer(initialState, identifier),
-        decorateDispatcher: createAtomicDispatch(identifier)
+        createAction: createAtomicAction(identifier),
+        identifier: identifier
     }
 }
+
+export const generateKey = (identifier: string, funcName?: string): string => {
+    return 'ATOMIC_' + identifier + '_' + (funcName || 'anon')
+}
+
+function guid(): string {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
+// next make batcher for create actions from key/value pairs of actions so we don't have to provide names

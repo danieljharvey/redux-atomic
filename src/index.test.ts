@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from 'redux'
-import { AtomicAction, AtomicActionType, createAtomic, REDUX_ATOMIC_ACTION } from './index'
+import { AtomicAction, AtomicActionType, createAtomic, REDUX_ATOMIC_ACTION, getFuncName, generateKey } from './index'
 
 interface AtomicState {
     title: string
@@ -21,24 +21,12 @@ const initialAtomicState: AtomicState = {
     }
 }
 
-interface AtomicState2 {
-    arrayOfNums: number[]
-    headerTitle: string
-}
-
-const initialAtomicState2: AtomicState2 = {
-    arrayOfNums: [],
-    headerTitle: ""
-}
-
 const atomic1 = createAtomic<AtomicState>(initialAtomicState)
-const atomicOne = createAtomic<AtomicState>(initialAtomicState)
-const atomic2 = createAtomic<AtomicState2>(initialAtomicState2)
+const atomic2 = createAtomic<AtomicState>(initialAtomicState)
 
 const sampleApp = combineReducers<any>({
-    atomicStore: atomic1.reducer,
-    otherAtomicStore: atomicOne.reducer,
-    atomicStore2: atomic2.reducer
+    atomicOne: atomic1.reducer,
+    atomicTwo: atomic2.reducer
 })
 
 const increment = (state: number): number => {
@@ -55,24 +43,36 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
 describe("We're testing this approach", () => {
     it("Changes the state using a function/action thing", () => {
         let store = createStore(sampleApp)
-        const dispatch = atomic1.decorateDispatcher(store.dispatch)
-        dispatch(changeTitle("Shitter"))
+        const action = atomic1.createAction(changeTitle("Shitter"))
+        store.dispatch(action)
         const state: any = store.getState()
-        expect(state.atomicStore.title).toEqual("Shitter")
+        expect(state.atomicOne.title).toEqual("Shitter")
     })
 
     it("Similar stores don't mess with one another", () => {
         let store = createStore(sampleApp)
 
-        const dispatchOne = atomic1.decorateDispatcher(store.dispatch)
-        const dispatchTwo = atomicOne.decorateDispatcher(store.dispatch)
-
-        dispatchOne(changeTitle("Shitter"))
-        dispatchTwo(changeTitle("Shotter"))
+        store.dispatch(atomic1.createAction(changeTitle("Shitter")))
+        store.dispatch(atomic2.createAction(changeTitle("Shotter")))
 
         const state: any = store.getState();
-        expect(state.atomicStore.title).toEqual("Shitter")
-        expect(state.otherAtomicStore.title).toEqual("Shotter")
+        expect(state.atomicOne.title).toEqual("Shitter")
+        expect(state.atomicTwo.title).toEqual("Shotter")
     })
 
+    it('generates key', () => {
+        expect(generateKey('test', 'getItem')).toEqual('ATOMIC_test_getItem')
+    })
+
+    it('createAtomicAction', () => {
+        const expected = {
+            type: generateKey(atomic1.identifier, "changeTitle"),
+            meta: {
+                id: REDUX_ATOMIC_ACTION,
+                key: atomic1.identifier,
+                change: changeTitle("horse")
+            }
+        }
+        expect(JSON.stringify(atomic1.createAction(changeTitle("horse"), 'changeTitle'))).toBe(JSON.stringify(expected))
+    })
 })

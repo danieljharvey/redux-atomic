@@ -51,8 +51,8 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
 describe("We're testing this approach", () => {
     it("Changes the state using a function/action thing", () => {
         let store = createStore(sampleApp)
-        const dispatch = createAtomicDispatch("one", store.dispatch)
-        dispatch(changeTitle("Shitter"))
+        const dispatch = createAtomicDispatch<AtomicState>("one")
+        dispatch(changeTitle("Shitter"))(store.dispatch)
         const state: any = store.getState()
         expect(state.atomicStore.title).toEqual("Shitter")
     })
@@ -68,11 +68,11 @@ describe("We're testing this approach", () => {
 
     it("Similar stores don't mess with one another", () => {
         let store = createStore(sampleApp)
-        const dispatchOne = createAtomicDispatch("one", store.dispatch)
-        const dispatchTwo = createAtomicDispatch("bum", store.dispatch)
+        const dispatchOne = createAtomicDispatch<AtomicState>("one")
+        const dispatchTwo = createAtomicDispatch<AtomicState>("bum")
 
-        dispatchOne(changeTitle("Shitter"))
-        dispatchTwo(changeTitle("Shotter"))
+        dispatchOne(changeTitle("Shitter"))(store.dispatch)
+        dispatchTwo(changeTitle("Shotter"))(store.dispatch)
 
         const state: any = store.getState();
         expect(state.atomicStore.title).toEqual("Shitter")

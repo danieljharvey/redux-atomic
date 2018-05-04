@@ -1,7 +1,13 @@
 import { Dispatch } from 'redux'
 
 export type AtomicReducerFunction<a> = (state: a) => a
+export type AtomicDispatcher<a> = (func: AtomicReducerFunction<a>) => (dispatch: Dispatch) => void
+export type AtomicReducer<a> = (state: a, action: AtomicAction<a>) => a
 
+export interface Atomic<a> {
+    reducer: AtomicReducer<a>
+    dispatch: AtomicDispatcher<a>
+}
 export enum AtomicActionType {
     AtomicAction = 'ATOMIC_ACTION'
 }
@@ -14,13 +20,15 @@ export interface AtomicAction<a> {
     change: AtomicReducerFunction<a>
 }
 
-export function createAtomicDispatch<a>(reducerKey: string, dispatch: Dispatch) {
-    return <a>(func: AtomicReducerFunction<a>): void => {
-        dispatch<AtomicAction<a>>({
-            type: REDUX_ATOMIC_ACTION,
-            key: reducerKey,
-            change: func
-        })
+export function createAtomicDispatch<a>(reducerKey: string): AtomicDispatcher<a> {
+    return <a>(func: AtomicReducerFunction<a>) => {
+        return function(dispatch: Dispatch): void  {
+            dispatch<AtomicAction<a>>({
+                type: REDUX_ATOMIC_ACTION,
+                key: reducerKey,
+                change: func
+            })
+        }
     }
 }
 
@@ -28,6 +36,13 @@ export function createAtomicReducer<a>(reducerKey: string, initialState: a) {
     return (state: a, action: AtomicAction<a>): a => {
         const thisState = state || initialState
         return (action.key === reducerKey && action.type === REDUX_ATOMIC_ACTION) ? action.change(thisState) : thisState
+    }
+}
+
+function createAtomic<a>(reducerKey: string, initialState: a): Atomic<a> {
+    return {
+        reducer: createAtomicReducer(reducerKey, initialState),
+        dispatch: createAtomicDispatch(reducerKey)
     }
 }
 

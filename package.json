@@ -18,7 +18,8 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "tsc": "tsc",
-    "tsc:watch": "tsc -w"
+    "tsc:watch": "tsc -w",
+    "prepublishOnly": "tsc -p ./ --outDir dist/"
   },
   "jest": {
     "transform": {

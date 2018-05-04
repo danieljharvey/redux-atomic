@@ -16,32 +16,33 @@ export const REDUX_ATOMIC_ACTION = 'reduxAtomic/REDUX_ATOMIC_ACTION'
 
 export interface AtomicAction<a> {
     type: typeof REDUX_ATOMIC_ACTION
-    key: string
+    key: object
     change: AtomicReducerFunction<a>
 }
 
-export function createAtomicDispatch<a>(reducerKey: string): AtomicDispatcher<a> {
-    return function(dispatch: Dispatch) {
+export function createAtomicDispatch<a>(identifier: object): AtomicDispatcher<a> {
+    return function (dispatch: Dispatch) {
         return <a>(func: AtomicReducerFunction<a>): void => {
             dispatch<AtomicAction<a>>({
                 type: REDUX_ATOMIC_ACTION,
-                key: reducerKey,
+                key: identifier,
                 change: func
             })
         }
     }
 }
 
-export function createAtomicReducer<a>(reducerKey: string, initialState: a) {
+export function createAtomicReducer<a>(initialState: a, identifier: object) {
     return (state: a, action: AtomicAction<a>): a => {
         const thisState = state || initialState
-        return (action.key === reducerKey && action.type === REDUX_ATOMIC_ACTION) ? action.change(thisState) : thisState
+        return (action.key === identifier && action.type === REDUX_ATOMIC_ACTION) ? action.change(thisState) : thisState
     }
 }
 
-export function createAtomic<a>(reducerKey: string, initialState: a): Atomic<a> {
+export function createAtomic<a>(initialState: a): Atomic<a> {
+    const identifier = {}
     return {
-        reducer: createAtomicReducer(reducerKey, initialState),
-        decorateDispatcher: createAtomicDispatch(reducerKey)
+        reducer: createAtomicReducer(initialState, identifier),
+        decorateDispatcher: createAtomicDispatch(identifier)
     }
 }

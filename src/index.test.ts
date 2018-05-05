@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from 'redux'
-import { AtomicAction, AtomicActionType, createAtomic, REDUX_ATOMIC_ACTION, generateKey, createActions } from './index'
+import { AtomicAction, createAtomic, REDUX_ATOMIC_ACTION, generateKey } from './index'
 
 interface AtomicState {
     title: string

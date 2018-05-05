@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from 'redux'
-import { AtomicAction, AtomicActionType, createAtomic, REDUX_ATOMIC_ACTION, generateKey } from './index'
+import { AtomicAction, AtomicActionType, createAtomic, REDUX_ATOMIC_ACTION, generateKey, createActions } from './index'
 
 interface AtomicState {
     title: string
@@ -29,8 +29,11 @@ const sampleApp = combineReducers<any>({
     atomicTwo: atomic2.reducer
 })
 
-const increment = (state: number): number => {
-    return state + 1
+const increment = (state: AtomicState): AtomicState => {
+    return {
+        ...state,
+        counter: state.counter + 1
+    }
 }
 
 const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
@@ -66,13 +69,14 @@ describe("We're testing this approach", () => {
 
     it('createAtomicAction', () => {
         const expected = {
-            type: generateKey(atomic1.identifier, "changeTitle"),
+            type: generateKey(atomic1.name, "changeTitle"),
             meta: {
                 id: REDUX_ATOMIC_ACTION,
-                key: atomic1.identifier,
+                key: atomic1.key,
                 change: changeTitle("horse")
             }
         }
         expect(JSON.stringify(atomic1.createAction(changeTitle("horse"), 'changeTitle'))).toBe(JSON.stringify(expected))
     })
+
 })

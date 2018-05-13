@@ -12,21 +12,18 @@ export interface AtomicAction<a> {
     meta: {
         id: typeof REDUX_ATOMIC_ACTION
         key: object
-        change: AtomicReducerFunction<a>
+        change: AtomicReducerFunc<a>
     }
 }
 
-export type AtomicReducerFunction<a> = (state: a) => a
-export type AtomicActionCreator<a> = (func: AtomicReducerFunction<a>, funcName?: string) => AtomicAction<a>
+export type AtomicReducerFunc<a> = (state: a) => a
+export type AtomicActionCreator<a> = (func: AtomicReducerFunc<a>, funcName?: string) => AtomicAction<a>
 export type AtomicReducer<a> = (state: a, action: AtomicAction<a>) => a
-
-export type AtomicReducerFunctionList<a> = { [k: string]: AtomicReducerFunction<a> }
-export type AtomicActionList<a> = { [k: string]: AtomicAction<a> }
 
 export const REDUX_ATOMIC_ACTION = 'reduxAtomic/REDUX_ATOMIC_ACTION'
 
 export function createAtomicAction<a>(key: object, reducerName: string): AtomicActionCreator<a> {
-    return <a>(func: AtomicReducerFunction<a>, funcName?: string): AtomicAction<a> => {
+    return <a>(func: AtomicReducerFunc<a>, funcName?: string): AtomicAction<a> => {
         return {
             type: generateKey(reducerName, funcName),
             meta: {

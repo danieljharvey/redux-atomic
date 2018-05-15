@@ -1,46 +1,49 @@
-import { Dispatch } from 'redux'
+import { Atomic, AtomicExporter, AtomicReducerFunc, REDUX_ATOMIC_ACTION, AtomicAction, AtomicActionCreator, AtomicDispatchFunc, AtomicActionList, AtomicDispatchList } from './types'
+export * from './types'
 
-export interface Atomic<a> {
-    reducer: AtomicReducer<a>
-    createAction: AtomicActionCreator<a>
-    name: string
-    key: object
-}
-
-export interface AtomicAction<a> {
-    type: string
-    meta: {
-        id: typeof REDUX_ATOMIC_ACTION
-        key: object
-        change: AtomicReducerFunction<a>
+export function createAtomic<s>(initialState: s, name?: string): Atomic<s> {
+    const key = {}
+    const reducerName = name || "anon"
+    const exporter: AtomicExporter<s> = createAtomicExporter(key, reducerName)
+    return {
+        reducer: createAtomicReducer(initialState, key),
+        createAction: createAtomicActionFunction(key, reducerName),
+        key,
+        name: reducerName,
+        exporter: createObjectExporter(exporter)
     }
 }
 
-export type AtomicReducerFunction<a> = (state: a) => a
-export type AtomicActionCreator<a> = (func: AtomicReducerFunction<a>, funcName?: string) => AtomicAction<a>
-export type AtomicReducer<a> = (state: a, action: AtomicAction<a>) => a
+function createObjectExporter<s>(exporter: AtomicExporter<s>) {
+    return function (obj: AtomicActionList<s>) {
+        let newObj: AtomicDispatchList<s> = {}
+        Object.keys(obj).forEach(key => {
+            const func = obj[key]
+            newObj[key] = exporter(func, key)
+        })
+        return newObj
+    }
+}
 
-export type AtomicReducerFunctionList<a> = { [k: string]: AtomicReducerFunction<a> }
-export type AtomicActionList<a> = { [k: string]: AtomicAction<a> }
-
-export const REDUX_ATOMIC_ACTION = 'reduxAtomic/REDUX_ATOMIC_ACTION'
-
-export function createAtomicAction<a>(key: object, reducerName: string): AtomicActionCreator<a> {
-    return <a>(func: AtomicReducerFunction<a>, funcName?: string): AtomicAction<a> => {
-        return {
-            type: generateKey(reducerName, funcName),
-            meta: {
-                id: REDUX_ATOMIC_ACTION,
-                key,
-                change: func
-            }
+function createAtomicAction<s>(key: object, func: AtomicReducerFunc<s>, reducerName: string, funcName?: string): AtomicAction<s> {
+    return {
+        type: generateKey(reducerName, funcName),
+        meta: {
+            id: REDUX_ATOMIC_ACTION,
+            key,
+            change: func
         }
     }
 }
 
+export function createAtomicActionFunction<s>(key: object, reducerName: string): AtomicActionCreator<s> {
+    return <s>(func: AtomicReducerFunc<s>, funcName?: string): AtomicAction<s> => {
+        return createAtomicAction(key, func, reducerName, funcName)
+    }
+}
 
-export function createAtomicReducer<a>(initialState: a, key: object) {
-    return (state: a, action: AtomicAction<a>): a => {
+export function createAtomicReducer<s>(initialState: s, key: object) {
+    return (state: s, action: AtomicAction<s>): s => {
         const thisState = state || initialState
         return (
             action.meta &&
@@ -50,14 +53,12 @@ export function createAtomicReducer<a>(initialState: a, key: object) {
     }
 }
 
-export function createAtomic<a>(initialState: a, name?: string): Atomic<a> {
-    const key = {}
-    const reducerName = name || "anon"
-    return {
-        reducer: createAtomicReducer(initialState, key),
-        createAction: createAtomicAction(key, reducerName),
-        key,
-        name: reducerName
+export function createAtomicExporter<s, p>(key: object, reducerName: string) {
+    return function wrapperMaker<s, p>(func: AtomicDispatchFunc<s>, funcName?: string) {
+        return function (...args: p[]): AtomicAction<s> {
+            const funcReady = func(...args)
+            return createAtomicAction(key, funcReady, reducerName, funcName)
+        }
     }
 }
 

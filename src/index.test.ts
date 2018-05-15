@@ -21,15 +21,15 @@ const initialAtomicState: AtomicState = {
     }
 }
 
-const atomic1 = createAtomic<AtomicState>(initialAtomicState)
-const atomic2 = createAtomic<AtomicState>(initialAtomicState)
+const atomic1 = createAtomic(initialAtomicState)
+const atomic2 = createAtomic(initialAtomicState)
 
 const sampleApp = combineReducers<any>({
     atomicOne: atomic1.reducer,
     atomicTwo: atomic2.reducer
 })
 
-const increment = (state: AtomicState): AtomicState => {
+const increment = () => (state: AtomicState): AtomicState => {
     return {
         ...state,
         counter: state.counter + 1
@@ -42,6 +42,11 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
         title
     }
 }
+
+const actions1 = atomic1.exporter({
+    increment,
+    changeTitle
+})
 
 describe("We're testing this approach", () => {
     it("Changes the state using a function/action thing", () => {
@@ -79,4 +84,42 @@ describe("We're testing this approach", () => {
         expect(JSON.stringify(atomic1.createAction(changeTitle("horse"), 'changeTitle'))).toBe(JSON.stringify(expected))
     })
 
+    it('uses exported actions directly with dispatch', () => {
+        let store = createStore(sampleApp)
+
+        const initialState: any = store.getState();
+        expect(initialState.atomicOne.title).toEqual('')
+        expect(initialState.atomicOne.counter).toEqual(0)
+
+        store.dispatch(actions1.changeTitle("Shitter"))
+        store.dispatch(actions1.increment())
+
+        const state: any = store.getState();
+        expect(state.atomicOne.title).toEqual("Shitter")
+        expect(state.atomicOne.counter).toEqual(1)
+    })
+
+    it('composes', () => {
+        const addWord = (word: string) => (toString: string): string => {
+            return toString + word
+        }
+        expect(addWord('drop')('slop')).toEqual('slopdrop')
+        const expected = {
+            title: "hey",
+            func: addWord('drop')
+        }
+
+        function wrapperMaker<a, b>(func: (...stuff: a[]) => b) {
+            return function (...stuff: a[]) {
+                const prepped = func(...stuff)
+                return {
+                    title: 'hey',
+                    func: prepped
+                }
+            }
+        }
+
+        expect(JSON.stringify(wrapperMaker(addWord)('drop'))).toEqual(JSON.stringify(expected))
+        expect(wrapperMaker(addWord)('drop').func('slop')).toEqual('slopdrop')
+    })
 })

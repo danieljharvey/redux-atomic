@@ -101,15 +101,17 @@ describe("We're testing this approach", () => {
     expect(state.atomicOne.counter).toEqual(1);
   });
 
-  it("composes", () => {
+  it("composes whilst keeping types", () => {
     const addWord = (word: string) => (toString: string): string => {
-      return toString + word;
+      return word + toString;
     };
-    expect(addWord("drop")("slop")).toEqual("slopdrop");
-    const expected = {
-      title: "hey",
-      func: addWord("drop")
+
+    const addWordAndNumber = (word: string, num: number) => (toString: string): string => {
+      return word + num.toString() + toString;
     };
+
+    expect(addWord("slop")("plop")).toEqual("slopplop");
+    expect(addWordAndNumber("slop", 100)("drop")).toEqual("slop100drop");
 
     function wrapperMaker<a, b>(func: (...stuff: a[]) => b) {
       return function(...stuff: a[]) {
@@ -120,8 +122,23 @@ describe("We're testing this approach", () => {
         };
       };
     }
-    const wrapped = wrapperMaker(addWord);
-    expect(JSON.stringify(wrapped("drop"))).toEqual(JSON.stringify(expected));
+
+    const expected1 = {
+      title: "hey",
+      func: addWord("drop")
+    };
+
+    const wrapped1 = wrapperMaker(addWord);
+    expect(JSON.stringify(wrapped1("drop"))).toEqual(JSON.stringify(expected1));
     expect(wrapperMaker(addWord)("drop").func("slop")).toEqual("slopdrop");
+
+    const expected2 = {
+      title: "hey",
+      func: addWordAndNumber("slop", 100)("drop")
+    };
+
+    const wrapped2 = wrapperMaker(addWord);
+    expect(JSON.stringify(wrapped2("drop"))).toEqual(JSON.stringify(expected2));
+    expect(wrapperMaker(addWordAndNumber)("drop").func("slop")).toEqual("slopdrop");
   });
 });

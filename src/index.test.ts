@@ -21,8 +21,10 @@ const initialAtomicState: AtomicState = {
   }
 };
 
-const atomic1 = createAtomic(initialAtomicState);
-const atomic2 = createAtomic(initialAtomicState);
+type ActionParamTypes = string | number;
+
+const atomic1 = createAtomic<AtomicState, ActionParamTypes>(initialAtomicState);
+const atomic2 = createAtomic<AtomicState, ActionParamTypes>(initialAtomicState);
 
 const sampleApp = combineReducers<any>({
   atomicOne: atomic1.reducer,
@@ -40,6 +42,13 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
   return {
     ...state,
     title
+  };
+};
+
+const incrementBy = (amount: number) => (state: AtomicState): AtomicState => {
+  return {
+    ...state,
+    counter: state.counter + amount
   };
 };
 
@@ -99,6 +108,14 @@ describe("We're testing this approach", () => {
     const state: any = store.getState();
     expect(state.atomicOne.title).toEqual("Shitter");
     expect(state.atomicOne.counter).toEqual(1);
+  });
+
+  it("uses increment by", () => {
+    let store = createStore(sampleApp);
+    store.dispatch(actions1.incrementBy("horse"));
+
+    const state: any = store.getState();
+    expect(state.atomicOne.counter).toEqual(0);
   });
 
   it("composes", () => {

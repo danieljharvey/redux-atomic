@@ -1,11 +1,11 @@
 export const REDUX_ATOMIC_ACTION = "reduxAtomic/REDUX_ATOMIC_ACTION";
 
-export interface Atomic<s> {
+export interface Atomic<s, T extends any> {
   reducer: AtomicReducer<s>;
   createAction: AtomicActionCreator<s>;
   name: string;
   key: object;
-  exporter: AtomicExporterFunc<s, any>;
+  exporter: AtomicExporterFunc<s, T>;
 }
 
 export interface AtomicAction<s> {
@@ -22,7 +22,7 @@ export type AtomicActionCreator<s> = (func: AtomicReducerFunc<s>, funcName?: str
 export type AtomicDispatchFunc<s, T extends any> = (...args: T[]) => AtomicReducerFunc<s>;
 export type AtomicReadyDispatchFunc<s, T extends any> = (...args: T[]) => AtomicAction<s>;
 export type AtomicReducer<s> = (state: s, action: AtomicAction<s>) => s;
-export type AtomicExporter<s, T extends any[]> = (
+export type AtomicExporter<s, T extends any> = (
   func: AtomicDispatchFunc<s, T>,
   funcName?: string
 ) => (...args: T[]) => AtomicAction<s>;

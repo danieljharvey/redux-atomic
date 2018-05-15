@@ -11,10 +11,10 @@ import {
 } from "./types";
 export * from "./types";
 
-export function createAtomic<s>(initialState: s, name?: string): Atomic<s> {
+export function createAtomic<s, T extends any>(initialState: s, name?: string): Atomic<s, T> {
   const key = {};
   const reducerName = name || "anon";
-  const exporter: AtomicExporter<s, any> = createAtomicExporter(key, reducerName);
+  const exporter: AtomicExporter<s, T> = createAtomicExporter(key, reducerName);
   return {
     reducer: createAtomicReducer(initialState, key),
     createAction: createAtomicActionFunction(key, reducerName),
@@ -24,9 +24,9 @@ export function createAtomic<s>(initialState: s, name?: string): Atomic<s> {
   };
 }
 
-function createObjectExporter<s>(exporter: AtomicExporter<s, any>) {
-  return function(obj: AtomicActionList<s, any>) {
-    let newObj: AtomicDispatchList<s, any> = {};
+function createObjectExporter<s, T extends any>(exporter: AtomicExporter<s, T>) {
+  return function(obj: AtomicActionList<s, T>) {
+    let newObj: AtomicDispatchList<s, T> = {};
     Object.keys(obj).forEach(key => {
       const func = obj[key];
       newObj[key] = exporter(func, key);

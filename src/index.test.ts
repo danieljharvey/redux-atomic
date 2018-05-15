@@ -137,7 +137,7 @@ describe("We're testing this approach", () => {
       func: addWordAndNumber("slop", 100)("drop")
     };
 
-    const wrapped2 = wrapperMaker(addWord);
+    const wrapped2 = wrapperMaker(addWordAndNumber);
     expect(JSON.stringify(wrapped2("drop"))).toEqual(JSON.stringify(expected2));
     expect(wrapperMaker(addWordAndNumber)("drop").func("slop")).toEqual("slopdrop");
   });

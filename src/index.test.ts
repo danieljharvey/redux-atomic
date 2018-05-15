@@ -93,7 +93,7 @@ describe("We're testing this approach", () => {
     expect(initialState.atomicOne.title).toEqual("");
     expect(initialState.atomicOne.counter).toEqual(0);
 
-    store.dispatch(actions1.changeTitle("Shitter"));
+    store.dispatch(actions1.changeTitle(0));
     store.dispatch(actions1.increment());
 
     const state: any = store.getState();

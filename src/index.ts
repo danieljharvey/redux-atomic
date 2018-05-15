@@ -14,7 +14,7 @@ export * from "./types";
 export function createAtomic<s>(initialState: s, name?: string): Atomic<s> {
   const key = {};
   const reducerName = name || "anon";
-  const exporter: AtomicExporter<s> = createAtomicExporter(key, reducerName);
+  const exporter: AtomicExporter<s, any> = createAtomicExporter(key, reducerName);
   return {
     reducer: createAtomicReducer(initialState, key),
     createAction: createAtomicActionFunction(key, reducerName),
@@ -24,9 +24,9 @@ export function createAtomic<s>(initialState: s, name?: string): Atomic<s> {
   };
 }
 
-function createObjectExporter<s>(exporter: AtomicExporter<s>) {
-  return function(obj: AtomicActionList<s>) {
-    let newObj: AtomicDispatchList<s> = {};
+function createObjectExporter<s>(exporter: AtomicExporter<s, any>) {
+  return function(obj: AtomicActionList<s, any>) {
+    let newObj: AtomicDispatchList<s, any> = {};
     Object.keys(obj).forEach(key => {
       const func = obj[key];
       newObj[key] = exporter(func, key);
@@ -67,8 +67,8 @@ export function createAtomicReducer<s>(initialState: s, key: object) {
 }
 
 export function createAtomicExporter<s, p>(key: object, reducerName: string) {
-  return function wrapperMaker<s, p>(func: AtomicDispatchFunc<s>, funcName?: string) {
-    return function(...args: p[]): AtomicAction<s> {
+  return function wrapperMaker<s, T extends any>(func: AtomicDispatchFunc<s, T>, funcName?: string) {
+    return function(...args: T[]): AtomicAction<s> {
       const funcReady = func(...args);
       return createAtomicAction(key, funcReady, reducerName, funcName);
     };

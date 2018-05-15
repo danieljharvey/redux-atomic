@@ -1,6 +1,6 @@
 {
   "name": "redux-atomic",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A nice new way to do actions",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -34,5 +34,6 @@
       "jsx",
       "json",
       "node"
-    ]  }
+    ]
+  }
 }

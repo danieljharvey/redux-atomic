@@ -86,7 +86,7 @@ describe("We're testing this approach", () => {
 
     it('uses exported actions directly with dispatch', () => {
         let store = createStore(sampleApp)
-        const changeTitleDispatch = atomic1.exporter(changeTitle, 'changeTitle')
+
         const initialState: any = store.getState();
         expect(initialState.atomicOne.title).toEqual('')
         expect(initialState.atomicOne.counter).toEqual(0)

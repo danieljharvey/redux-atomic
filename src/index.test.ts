@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from 'redux'
-import { AtomicAction, createAtomic, REDUX_ATOMIC_ACTION, generateKey } from './index'
+import { AtomicAction, createAtomic, REDUX_ATOMIC_ACTION } from './index'
 
 interface AtomicState {
     title: string
@@ -43,16 +43,11 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
     }
 }
 
-const actions1 = atomic1.exporter({
-    increment,
-    changeTitle
-})
-
 describe("We're testing this approach", () => {
     it("Changes the state using a function/action thing", () => {
         let store = createStore(sampleApp)
-        const action = atomic1.createAction(changeTitle("Shitter"))
-        store.dispatch(action)
+        const action = atomic1.wrap(changeTitle)
+        store.dispatch(action("Shitter"))
         const state: any = store.getState()
         expect(state.atomicOne.title).toEqual("Shitter")
     })
@@ -60,66 +55,90 @@ describe("We're testing this approach", () => {
     it("Similar stores don't mess with one another", () => {
         let store = createStore(sampleApp)
 
-        store.dispatch(atomic1.createAction(changeTitle("Shitter")))
-        store.dispatch(atomic2.createAction(changeTitle("Shotter")))
+        store.dispatch(atomic1.wrap(changeTitle)("Shitter"))
+        store.dispatch(atomic2.wrap(changeTitle)("Shotter"))
 
         const state: any = store.getState();
         expect(state.atomicOne.title).toEqual("Shitter")
         expect(state.atomicTwo.title).toEqual("Shotter")
     })
+})
 
-    it('generates key', () => {
-        expect(generateKey('test', 'getItem')).toEqual('ATOMIC_test_getItem')
+interface StateMate {
+    number: number
+    string: string
+}
+
+const initialState: StateMate = {
+    number: 0,
+    string: ""
+}
+
+const zero = () => (state: StateMate): StateMate => {
+    return {
+        ...state,
+        number: state.number + 1
+    }
+}
+
+const one = (num: number) => (state: StateMate): StateMate => {
+    return {
+        ...state,
+        number: state.number + num
+    }
+}
+
+const two = (str: string, num: number) => (state: StateMate): StateMate => {
+    return {
+        ...state,
+        string: str,
+        number: num
+    }
+}
+
+const three = (str: string, str2: string, num: number) => (state: StateMate): StateMate => {
+    return {
+        ...state,
+        string: str + str2,
+        number: num
+    }
+}
+
+const { wrap, reducer } = createAtomic('test')
+
+describe("blah", () => {
+    it("zero arity", () => {
+        const wZero = wrap(zero, "zero");
+        const oZero = wZero().meta.change(initialState)
+        expect(oZero).toEqual({
+            ...initialState,
+            number: 1
+        })
     })
-
-    it('createAtomicAction', () => {
-        const expected = {
-            type: generateKey(atomic1.name, "changeTitle"),
-            meta: {
-                id: REDUX_ATOMIC_ACTION,
-                key: atomic1.key,
-                change: changeTitle("horse")
-            }
-        }
-        expect(JSON.stringify(atomic1.createAction(changeTitle("horse"), 'changeTitle'))).toBe(JSON.stringify(expected))
+    it('single arity', () => {
+        const wOne = wrap(one, "one");
+        const oOne = wOne(100).meta.change(initialState)
+        expect(oOne).toEqual({
+            ...initialState,
+            number: 100
+        })
     })
-
-    it('uses exported actions directly with dispatch', () => {
-        let store = createStore(sampleApp)
-
-        const initialState: any = store.getState();
-        expect(initialState.atomicOne.title).toEqual('')
-        expect(initialState.atomicOne.counter).toEqual(0)
-
-        store.dispatch(actions1.changeTitle("Shitter"))
-        store.dispatch(actions1.increment())
-
-        const state: any = store.getState();
-        expect(state.atomicOne.title).toEqual("Shitter")
-        expect(state.atomicOne.counter).toEqual(1)
+    it('double arity', () => {
+        const wTwo = wrap(two, "two");
+        const oTwo = wTwo("dog", 100).meta.change(initialState)
+        expect(oTwo).toEqual({
+            ...initialState,
+            number: 100,
+            string: "dog"
+        })
     })
-
-    it('composes', () => {
-        const addWord = (word: string) => (toString: string): string => {
-            return toString + word
-        }
-        expect(addWord('drop')('slop')).toEqual('slopdrop')
-        const expected = {
-            title: "hey",
-            func: addWord('drop')
-        }
-
-        function wrapperMaker<a, b>(func: (...stuff: a[]) => b) {
-            return function (...stuff: a[]) {
-                const prepped = func(...stuff)
-                return {
-                    title: 'hey',
-                    func: prepped
-                }
-            }
-        }
-
-        expect(JSON.stringify(wrapperMaker(addWord)('drop'))).toEqual(JSON.stringify(expected))
-        expect(wrapperMaker(addWord)('drop').func('slop')).toEqual('slopdrop')
+    it('third arity', () => {
+        const wThree = wrap(three, 'three')
+        const oThree = wThree("dog", "face", 666).meta.change(initialState)
+        expect(oThree).toEqual({
+            ...initialState,
+            number: 666,
+            string: "dogface"
+        })
     })
 })

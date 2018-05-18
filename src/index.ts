@@ -5,10 +5,12 @@ export type AtomicReducer<s, t> = (state: s, action: AtomicAction<s, t>) => s | 
 
 export interface AtomicAction<s, t> {
     type: string
-    meta: {
-        id: typeof REDUX_ATOMIC_ACTION
-        key: object
-        change: AtomicReducerFunc<s, t>
+    payload: {
+        meta: {
+            id: typeof REDUX_ATOMIC_ACTION
+            key: object
+            change: AtomicReducerFunc<s, t>
+        }
     }
 }
 
@@ -38,20 +40,22 @@ export function createAtomic<s, t>(initialState: s, name?: string) {
         return (state: s, action: AtomicAction<s, t>): s | t => {
             const thisState = state || initialState
             return (
-                action.meta &&
-                action.meta.key === key &&
-                action.meta.id === REDUX_ATOMIC_ACTION
-            ) ? action.meta.change(thisState) : thisState
+                action.payload.meta &&
+                action.payload.meta.key === key &&
+                action.payload.meta.id === REDUX_ATOMIC_ACTION
+            ) ? action.payload.meta.change(thisState) : thisState
         }
     }
 
     function wrapStateFunc<s, t>(func: AtomicReducerFunc<s, t>, funcName?: string): AtomicAction<s, t> {
         return {
             type: generateKey(reducerName, funcName),
-            meta: {
-                id: REDUX_ATOMIC_ACTION,
-                key,
-                change: func
+            payload: {
+                meta: {
+                    id: REDUX_ATOMIC_ACTION,
+                    key,
+                    change: func
+                }
             }
         }
     }

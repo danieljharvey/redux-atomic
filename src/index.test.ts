@@ -111,7 +111,7 @@ const { wrap, reducer } = createAtomic('test')
 describe("blah", () => {
     it("zero arity", () => {
         const wZero = wrap(zero, "zero");
-        const oZero = wZero().payload.meta.change(initialState)
+        const oZero = wZero().meta.change(initialState)
         expect(oZero).toEqual({
             ...initialState,
             number: 1
@@ -119,7 +119,7 @@ describe("blah", () => {
     })
     it('single arity', () => {
         const wOne = wrap(one, "one");
-        const oOne = wOne(100).payload.meta.change(initialState)
+        const oOne = wOne(100).meta.change(initialState)
         expect(oOne).toEqual({
             ...initialState,
             number: 100
@@ -127,7 +127,7 @@ describe("blah", () => {
     })
     it('double arity', () => {
         const wTwo = wrap(two, "two");
-        const oTwo = wTwo("dog", 100).payload.meta.change(initialState)
+        const oTwo = wTwo("dog", 100).meta.change(initialState)
         expect(oTwo).toEqual({
             ...initialState,
             number: 100,
@@ -136,7 +136,7 @@ describe("blah", () => {
     })
     it('third arity', () => {
         const wThree = wrap(three, 'three')
-        const oThree = wThree("dog", "face", 666).payload.meta.change(initialState)
+        const oThree = wThree("dog", "face", 666).meta.change(initialState)
         expect(oThree).toEqual({
             ...initialState,
             number: 666,

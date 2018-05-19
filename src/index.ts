@@ -5,14 +5,13 @@ export type AtomicReducer<s, t> = (state: s, action: AtomicAction<s, t>) => s | 
 
 export interface AtomicAction<s, t> {
     type: string
-    payload: {
-        meta: {
-            id: typeof REDUX_ATOMIC_ACTION
-            key: object
-            change: AtomicReducerFunc<s, t>
-        }
+    meta: {
+        id: typeof REDUX_ATOMIC_ACTION
+        key: object
+        change: AtomicReducerFunc<s, t>
     }
 }
+
 
 export type f<s, t> = () => AtomicReducerFunc<s, t>
 export type f1<s, t, A> = (a: A) => AtomicReducerFunc<s, t>
@@ -40,26 +39,24 @@ export function createAtomic<s, t>(initialState: s, name?: string) {
         return (state: s, action: AtomicAction<s, t>): s | t => {
             const thisState = state || initialState
             return (
-                action.payload &&
-                action.payload.meta &&
-                action.payload.meta.key === key &&
-                action.payload.meta.id === REDUX_ATOMIC_ACTION
-            ) ? action.payload.meta.change(thisState) : thisState
+                action.meta &&
+                action.meta.key === key &&
+                action.meta.id === REDUX_ATOMIC_ACTION
+            ) ? action.meta.change(thisState) : thisState
         }
     }
 
     function wrapStateFunc<s, t>(func: AtomicReducerFunc<s, t>, funcName?: string): AtomicAction<s, t> {
         return {
             type: generateKey(reducerName, funcName),
-            payload: {
-                meta: {
-                    id: REDUX_ATOMIC_ACTION,
-                    key,
-                    change: func
-                }
+            meta: {
+                id: REDUX_ATOMIC_ACTION,
+                key,
+                change: func
             }
         }
     }
+
 
     function wrapper<s, t>(func: f<s, t>, funcName?: string): g<s, t>
     function wrapper<s, t, A>(func: f1<s, t, A>, funcName?: string): g1<s, t, A>

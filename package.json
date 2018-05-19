@@ -1,6 +1,6 @@
 {
   "name": "redux-atomic",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "A nice new way to do actions",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

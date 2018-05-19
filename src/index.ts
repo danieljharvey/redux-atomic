@@ -40,6 +40,7 @@ export function createAtomic<s, t>(initialState: s, name?: string) {
         return (state: s, action: AtomicAction<s, t>): s | t => {
             const thisState = state || initialState
             return (
+                action.payload &&
                 action.payload.meta &&
                 action.payload.meta.key === key &&
                 action.payload.meta.id === REDUX_ATOMIC_ACTION

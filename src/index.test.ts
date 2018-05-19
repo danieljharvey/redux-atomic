@@ -46,8 +46,8 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
 describe("We're testing this approach", () => {
     it("Changes the state using a function/action thing", () => {
         let store = createStore(sampleApp)
-        const action = atomic1.wrap(changeTitle)
-        store.dispatch(action("Shitter"))
+        const changeTitleWrap = atomic1.wrap(changeTitle)
+        store.dispatch(changeTitleWrap("Shitter"))
         const state: any = store.getState()
         expect(state.atomicOne.title).toEqual("Shitter")
     })
@@ -55,8 +55,10 @@ describe("We're testing this approach", () => {
     it("Similar stores don't mess with one another", () => {
         let store = createStore(sampleApp)
 
-        store.dispatch(atomic1.wrap(changeTitle)("Shitter"))
-        store.dispatch(atomic2.wrap(changeTitle)("Shotter"))
+        const changeTitleWrap1 = atomic1.wrap(changeTitle)
+        const changeTitleWrap2 = atomic2.wrap(changeTitle)
+        store.dispatch(changeTitleWrap1("Shitter"))
+        store.dispatch(changeTitleWrap2("Shotter"))
 
         const state: any = store.getState();
         expect(state.atomicOne.title).toEqual("Shitter")
@@ -109,7 +111,7 @@ const { wrap, reducer } = createAtomic('test')
 describe("blah", () => {
     it("zero arity", () => {
         const wZero = wrap(zero, "zero");
-        const oZero = wZero().meta.change(initialState)
+        const oZero = wZero().payload.meta.change(initialState)
         expect(oZero).toEqual({
             ...initialState,
             number: 1
@@ -117,7 +119,7 @@ describe("blah", () => {
     })
     it('single arity', () => {
         const wOne = wrap(one, "one");
-        const oOne = wOne(100).meta.change(initialState)
+        const oOne = wOne(100).payload.meta.change(initialState)
         expect(oOne).toEqual({
             ...initialState,
             number: 100
@@ -125,7 +127,7 @@ describe("blah", () => {
     })
     it('double arity', () => {
         const wTwo = wrap(two, "two");
-        const oTwo = wTwo("dog", 100).meta.change(initialState)
+        const oTwo = wTwo("dog", 100).payload.meta.change(initialState)
         expect(oTwo).toEqual({
             ...initialState,
             number: 100,
@@ -134,7 +136,7 @@ describe("blah", () => {
     })
     it('third arity', () => {
         const wThree = wrap(three, 'three')
-        const oThree = wThree("dog", "face", 666).meta.change(initialState)
+        const oThree = wThree("dog", "face", 666).payload.meta.change(initialState)
         expect(oThree).toEqual({
             ...initialState,
             number: 666,

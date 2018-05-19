@@ -167,3 +167,7 @@ export actions = {
 Totally. And it works the same, the exported actions can be dispatched like normal, and the reducer can be combined like any other. The state isn't held in any particularly magical way, so is accessed like any other.
 
 Seems fine? Sure. Most things are.
+
+### Thanks
+
+Thanks [Riku](https://github.com/rikukissa) and [David](https://github.com/ds300) for knowing facts about these sort of things which I stole and used to make the thing better.

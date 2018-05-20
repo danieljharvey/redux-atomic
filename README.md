@@ -18,22 +18,54 @@ Then type something like this into a text editor or similar:
 
 ```typescript
 
+// niceReducer.ts
+
 import { createReducer } from 'redux-atomic'
 
 const initialState: number = 0;
 
 const { reducer, wrap } = createReducer(initialState)
 
-const numberBiggener = (howMuch: number) => (state: number): number => state + howMuch
+const inc = (howMuch: number) => (state: number): number => state + howMuch
 
-const numberSmallener = (howMuch: number) => (state: number): number => state - howMuch
+const dec = (howMuch: number) => (state: number): number => state - howMuch
 
 export numberReducer = reducer
 
-// OK, this could be nicer, but bear with me
 export actions = {
-    numberBiggener: wrap(numberBiggener),
-    numberSmallener: wrap(numberSmallener),
+    inc: wrap(inc),
+    dec: wrap(dec),
+}
+
+```
+
+This reducer can then be connected to others however you like to do that...
+
+```typescript
+
+// store.ts
+
+import { numberReducer } from 'niceReducer'
+import { someOtherTerribleReducer } from 'awfulFile'
+
+const appReducers = combineReducers({
+    numbers: numberReducer,
+    otherStuff: someOtherTerribleReducer
+})
+
+```
+
+And the actions can be connected to a component something like this...
+
+```typescript
+
+// connectorComponent.ts
+
+import { actions } from 'niceReducer'
+
+const mapDispatchToProps = (dispatch) => {
+    inc: dispatch(actions.inc),
+    dec: dispatch(actions.dec)
 }
 
 ```
@@ -42,24 +74,27 @@ export actions = {
 
 I mean, really, why anything?
 
-But sure, why this?
+But sure, why this? Am I supposed to rewrite my whole app now?
 
-Redux is pretty great. It does two things really well.
+(short, answer, no)
+
+Redux is pretty great. It does three things really well:
 
 1. Keeps all state in an auditable place
-2. Allows that centralised state to be modified in a consistent auditable fashion
+2. Allows that state to be modified in a consistent auditable fashion
 3. Allows a single action to be fired that can make changes across many reducers
 
-In my (by no means comprehensive) experience I have found that in most apps, there is a lot of call for 1 and 2 and only occasional need for 3. Although a few one-to-many action-to-state-change situations happen, most action-to-state-change relations are one-to-one and don't need wrapping into global actions.
+However, in my (by no means comprehensive) experience I have found that in most apps, there is a lot of call for 1 and 2 and only occasional need for 3. Although a few one-to-many action-to-state-change situations happen, most action-to-state-change relations are one-to-one and don't need wrapping into global actions.
 
-And that's great, because writing separate sets of functions for actions and reducers is the major cause of boilerplate RSI in Redux. Most of the time, why bother?
+And that's great, because writing separate sets of functions for actions and reducers is the major cause of boilerplate RSI in Redux. If we don't need the full power of Redux for most stuff, then why use it?
 
-Let's look at what the code example above looks like, but written in traditional Redux style.
+Let's look at a code example for a basic reducer with actions in the full-fat Redux style.
 
 ```typescript
 
 const MAKE_THE_NUMBER_BIGGER = "someSortOf.NameSpace.MAKE_THE_NUMBER_BIGGER"
 const MAKE_THE_NUMBER_SMALLER = "someSortOf.NameSpace.MAKE_THE_NUMBER_SMALLER"
+const CHANGE_THE_NAME = "someSortOf.NameSpace.CHANGE_THE_NAME"
 
 interface NumberBiggener {
     type: typeof MAKE_THE_NUMBER_BIGGER
@@ -89,15 +124,49 @@ const numberSmallener = (howMuch: number) => ({
     }
 })
 
-const initialState: StateType = 0
+interface NameChanger {
+    type: typeof CHANGE_THE_NAME,
+    payload: {
+        title: string
+    }
+}
 
-function numberReducer(state: number, action: NumberBiggener | NumberSmallener ): number {
+const nameChanged = (title: string) => ({
+    type: CHANGE_THE_NAME,
+    payload: {
+        title
+    }
+})
+
+interface NiceState {
+    title: string
+    number: number
+}
+
+const initialState: NiceState = {
+    title: "",
+    number: 0
+}
+
+function numberReducer(state: NiceState, action: NumberBiggener | NumberSmallener ): NiceState {
   switch (action.type) {
       case MAKE_THE_NUMBER_BIGGER:
-        return state + action.payload.howMuch
+        return {
+            ...state,
+            number: state.number + action.payload.howMuch
+        }
     
     case MAKE_THE_NUMBER_SMALLER:
-        return state + action.payload.howMuch
+        return {
+            ...state,
+            number: state.number - action.payload.howMuch
+        }
+          
+    case CHANGE_THE_NAME:
+        return {
+            ...state,
+            title: action.payload.title
+        }
     
     default:
         return state;
@@ -107,57 +176,63 @@ function numberReducer(state: number, action: NumberBiggener | NumberSmallener )
 export numberReducer;
 export actions = {
     numberBiggener,
-    numberSmallener
+    numberSmallener,
+    nameChanger
 }
 
 ```
 
-I'm trying to be fair and not make some exagerated stuff, and typings do make stuff more verbose, but that's still at lot of stuff. They'd be used elsewhere something like this:
-
-```typescript
-
-import { actions } from 'boilerplateReducerLand'
-
-dispatch(actions.numberBiggener(1))
-dispatch(actions.numberSmallener(1))
-
-```
-
-Oh, and at some point imported into `combineReducers` or similar...
-
-```typescript
-
-import { numberReducer } from 'boilerplateReducerLand'
-
-const appReducers = combineReducers({
-    numbers: numberReducer,
-    otherStuff: otherStuffReducer
-})
-
-```
+I'm trying to be fair and not make some exagerated stuff, and typings do make stuff more verbose, but that's still at lot of stuff. With a few more actions you'd be irresponsible not to move the action creators and reducer into separate folders, and then all the constants need exporting/importing etc etc. 
 
 ### It doesn't have to be like this
 
-This code (the same code from above, this library is inspired by laziness so why stop now) does the same as that reducer...
+Using the Redux Atomic style looks more like this:
 
 ```typescript
 
 import { createReducer } from 'redux-atomic'
 
-const initialState: number = 0;
+interface NiceState {
+    title: string
+    number: number
+}
 
-const { reducer, wrap } = createReducer(initialState)
+const initialState: NiceState = {
+    title: "",
+    number: 0
+}
 
-const numberBiggener = (howMuch: number) => (state: number): number => state + howMuch
+const reducerName = "NiceReducer"
 
-const numberSmallener = (howMuch: number) => (state: number): number => state - howMuch
+// 'niceReducer' here is a title that is used to create meaningful action names
+// so you can see what's going on in Redux Dev Tools
+const { reducer, wrap } = createReducer(initialState, niceReducer)
 
+const increment = (amount: number) => (state: NiceState): NiceState => 
+    ({
+        ...state,
+        state.number + howMuch
+    })
+
+const decrement = (amount: number) => (state: NiceState): NiceState => 
+    ({
+        ...state,
+        state.number - howMuch
+    })
+
+const rename = (name: string) => (state: NiceState): NiceState =>
+    ({
+        ...state,
+        title: name
+    })
+    
 export numberReducer = reducer
 
-// OK, this could be nicer, but bear with me
+// the second argument to wrap() is also used when it generates action names
 export actions = {
-    numberBiggener: wrap(numberBiggener),
-    numberSmallener: wrap(numberSmallener),
+    increment: wrap(increment, "Increment"),
+    decrement: wrap(decrement, "Decrement"),
+    rename: wrap(rename, "Rename")
 }
 
 ```
@@ -166,8 +241,54 @@ export actions = {
 
 Totally. And it works the same, the exported actions can be dispatched like normal, and the reducer can be combined like any other. The state isn't held in any particularly magical way, so is accessed like any other.
 
+### But what about actions that do trigger changes in multiple reducers?
+
+Do whatever you were doing before. This isn't designed to replace every reducer in your code, but rather offer a lighter version that works alongside the existing ones for the times you don't need massive changes.
+
+### Anything else?
+
+Building your reducers in this way means you can have multiple instances of them that don't interact with one another. So long as each one uses the `wrap()` function returned by the right `createAtomic()` call you can have 100 different reducers all happily ignoring one another without any hard work.
+
+### Testing
+
+As these are just functions, testing them is pretty straightforward. Jest tests for the above look something like this:
+
+```typescript
+
+const initialState = {
+    title: "Yeah",
+    number: 100
+}
+
+describe("Redux atomic is OK", () => {
+    it("Increments like a professional", () => {
+        expect(increment(10)(initialState)).toEqual({title: "Yeah", number: 110})
+    })
+    it("Decrements like a professional", () => {
+        expect(decrement(10)(initialState)).toEqual({title: "Yeah", number: 90})
+    })
+    it("Renames in an efficient and timely manner", () => {
+        expect(rename("Relatable pop culture reference")(initialState)).toEqual({title: "Relatable pop culture reference", number: 100})
+    })
+})
+
+```
+
+Testing the outcome of a series of actions is as simple as composing them together (using Ramda's compose here but hopefully you get the idea):
+
+```
+import { compose } from 'ramda'
+
+const initialState = { title: "blah", number: 0 }
+const bunchOfActions = compose(increment(10), decrement(20), rename("Dog"))
+const expected = { title: "Dog", number: -10 }
+
+expect(bunchOfActions(initialState)).toEqual(expected)
+
+```
+
 Seems fine? Sure. Most things are.
 
 ### Thanks
 
-Thanks [Riku](https://github.com/rikukissa) and [David](https://github.com/ds300) for knowing facts about these sort of things which I stole and used to make the thing better.
+Thanks to the creators and maintainers of [Redux](https://github.com/reduxjs/redux/), for making a simple sane solution for state management. Thanks [Riku](https://github.com/rikukissa) and [David](https://github.com/ds300) for knowing facts about these sort of things which I stole and used to make the thing better.

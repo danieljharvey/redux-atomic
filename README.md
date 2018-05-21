@@ -274,6 +274,8 @@ Let's say that we dispatched `changeAmountAndTitle(100, "fried eggs")`. The disp
 
 ```
 
+This data can be picked up by other reducers or used for auditing in Redux Dev Tools.
+
 ### Anything else?
 
 Building your reducers in this way means you can have multiple instances of them that don't interact with one another. So long as each one uses the `wrap()` function returned by the right `createAtomic()` call you can have 100 different reducers all happily ignoring one another without any hard work.

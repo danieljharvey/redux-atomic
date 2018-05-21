@@ -5,6 +5,7 @@ export type AtomicReducer<s, t> = (state: s, action: AtomicAction<s, t>) => s | 
 
 export interface AtomicAction<s, t> {
     type: string
+    payload: any[]
     meta: {
         id: typeof REDUX_ATOMIC_ACTION
         key: object
@@ -46,9 +47,10 @@ export function createAtomic<s, t>(initialState: s, name?: string) {
         }
     }
 
-    function wrapStateFunc<s, t>(func: AtomicReducerFunc<s, t>, funcName?: string): AtomicAction<s, t> {
+    function wrapStateFunc<s, t>(func: AtomicReducerFunc<s, t>, params: any[], actionName?: string): AtomicAction<s, t> {
         return {
-            type: generateKey(reducerName, funcName),
+            type: generateKey(reducerName, actionName),
+            payload: stripUndefined(params),
             meta: {
                 id: REDUX_ATOMIC_ACTION,
                 key,
@@ -57,6 +59,11 @@ export function createAtomic<s, t>(initialState: s, name?: string) {
         }
     }
 
+    function stripUndefined(list: any[]): any[] {
+        return list.reduce((acc, val) => {
+            return (val !== undefined) ? [...acc, val] : [...acc]
+        }, [])
+    }
 
     function wrapper<s, t>(func: f<s, t>, funcName?: string): g<s, t>
     function wrapper<s, t, A>(func: f1<s, t, A>, funcName?: string): g1<s, t, A>
@@ -64,12 +71,12 @@ export function createAtomic<s, t>(initialState: s, name?: string) {
     function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>, funcName?: string): g3<s, t, A, B, C>
     function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>, funcName?: string): g4<s, t, A, B, C, D> {
         return function (a: A, b: B, c: C, d: D) {
-            return wrapStateFunc(func(a, b, c, d), funcName)
+            return wrapStateFunc(func(a, b, c, d), [a, b, c, d], funcName)
         }
     }
 
-    function generateKey(identifier: string, funcName?: string): string {
-        return 'ATOMIC_' + identifier + '_' + (funcName || 'anon')
+    function generateKey(identifier: string, actionName?: string): string {
+        return actionName || 'ATOMIC_' + identifier
     }
 }
 

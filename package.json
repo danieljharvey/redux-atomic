@@ -1,6 +1,6 @@
 {
   "name": "redux-atomic",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "A nice new way to do actions",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,6 +20,7 @@
     "test:watch": "jest --watchAll",
     "tsc": "tsc",
     "tsc:watch": "tsc -w",
+    "tsc:check": "tsc -w --noEmit",
     "prepublishOnly": "tsc -p ./ --outDir dist/"
   },
   "jest": {

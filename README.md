@@ -228,10 +228,9 @@ const rename = (name: string) => (state: NiceState): NiceState =>
     
 export numberReducer = reducer
 
-// the second argument to wrap() is also used when it generates action names
 export actions = {
-    increment: wrap(increment, "Increment"),
-    decrement: wrap(decrement, "Decrement"),
+    increment: wrap(increment),
+    decrement: wrap(decrement),
     rename: wrap(rename, "Rename")
 }
 
@@ -243,7 +242,37 @@ Totally. And it works the same, the exported actions can be dispatched like norm
 
 ### But what about actions that do trigger changes in multiple reducers?
 
-Do whatever you were doing before. This isn't designed to replace every reducer in your code, but rather offer a lighter version that works alongside the existing ones for the times you don't need massive changes.
+The second argument of the `wrap` function can be used to specify an action name, and any parameters passed to the function will be passed to the `payload` of the action as an array. For instance:
+
+```typescript
+
+const { reducer, wrap } = createReducer(initialState, niceReducer)
+
+const changeAmountAndTitle = (amount: number, title: string) => (state) => 
+    ({
+        ...state,
+        amount: amount,
+        title: title
+    })
+
+const CHANGE_AMOUNT_AND_TITLE = 'CHANGE_AMOUNT_AND_TITLE'
+
+export actions = {
+    changeAmountAndTitle: wrap(changeAmountAndTitle, CHANGE_AMOUNT_AND_TITLE)
+}
+
+```
+
+Let's say that we dispatched `changeAmountAndTitle(100, "fried eggs")`. The dispatched action, as well as triggering the atomic reducer, will fire out an action containing (amongst other things) the following:
+
+```typescript 
+
+{
+    type: 'CHANGE_AMOUNT_AND_TITLE',
+    payload: [100, "fried eggs"]
+}
+
+```
 
 ### Anything else?
 

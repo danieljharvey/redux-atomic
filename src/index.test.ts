@@ -144,3 +144,25 @@ describe("blah", () => {
         })
     })
 })
+
+describe("It creates fake actions", () => {
+    it('falls back to reducer name as action name', () => {
+        const { wrap } = createAtomic(0, 'yeah')
+        const wZero = wrap(zero)
+        const action = wZero()
+        expect(action.type).toEqual("ATOMIC_yeah")
+    })
+    it("correctly uses a passed action name", () => {
+        const NICE_ACTION_NAME_BUDDY = "NICE_ACTION_NAME_BUDDY"
+        const wZero = wrap(zero, NICE_ACTION_NAME_BUDDY)
+        const action = wZero()
+        expect(action.type).toEqual(NICE_ACTION_NAME_BUDDY)
+    })
+
+    it("passes it's params as the payload", () => {
+        const NICE_ACTION_NAME_BUDDY = "NICE_ACTION_NAME_BUDDY"
+        const wThree = wrap(three, NICE_ACTION_NAME_BUDDY)
+        const action = wThree("One", "Two", 3)
+        expect(action.payload).toEqual(["One", "Two", 3])
+    })
+})

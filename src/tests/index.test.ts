@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from "redux";
-import { AtomicAction, createAtomic, REDUX_ATOMIC_ACTION } from "../index";
+import { AtomicAction, createAtomic } from "../index";
 
 interface AtomicState {
   title: string;
@@ -20,15 +20,6 @@ const initialAtomicState: AtomicState = {
     age: 0
   }
 };
-
-const atomic1 = createAtomic(initialAtomicState);
-const atomic2 = createAtomic(initialAtomicState);
-
-const sampleApp = combineReducers<any>({
-  atomicOne: atomic1.reducer,
-  atomicTwo: atomic2.reducer
-});
-
 const increment = () => (state: AtomicState): AtomicState => {
   return {
     ...state,
@@ -43,11 +34,28 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
   };
 };
 
+const atomic1 = createAtomic("atomic1", initialAtomicState, [increment, changeTitle]);
+const atomic2 = createAtomic("atomic2", initialAtomicState, [increment, changeTitle]);
+
+const sampleApp = combineReducers<any>({
+  atomicOne: atomic1.reducer,
+  atomicTwo: atomic2.reducer
+});
+
+const atomic1Actions = {
+  increment: atomic1.wrap(increment),
+  changeTitle: atomic1.wrap(changeTitle)
+};
+
+const atomic2Actions = {
+  increment: atomic2.wrap(increment),
+  changeTitle: atomic2.wrap(changeTitle)
+};
+
 describe("We're testing this approach", () => {
   it("Changes the state using a function/action thing", () => {
     let store = createStore(sampleApp);
-    const changeTitleWrap = atomic1.wrap(changeTitle);
-    store.dispatch(changeTitleWrap("Shitter"));
+    store.dispatch(atomic1Actions.changeTitle("Shitter"));
     const state: any = store.getState();
     expect(state.atomicOne.title).toEqual("Shitter");
   });
@@ -55,14 +63,22 @@ describe("We're testing this approach", () => {
   it("Similar stores don't mess with one another", () => {
     let store = createStore(sampleApp);
 
-    const changeTitleWrap1 = atomic1.wrap(changeTitle);
-    const changeTitleWrap2 = atomic2.wrap(changeTitle);
-    store.dispatch(changeTitleWrap1("Shitter"));
-    store.dispatch(changeTitleWrap2("Shotter"));
+    store.dispatch(atomic1Actions.changeTitle("Shitter"));
+    store.dispatch(atomic2Actions.changeTitle("Shotter"));
 
     const state: any = store.getState();
     expect(state.atomicOne.title).toEqual("Shitter");
     expect(state.atomicTwo.title).toEqual("Shotter");
+  });
+
+  it("doesn't break when provided a faulty name", () => {
+    let store = createStore(sampleApp);
+
+    const firstState: any = store.getState();
+    store.dispatch({ type: "sdfslkdfklslkdflk;sfd" });
+
+    const endState: any = store.getState();
+    expect(firstState).toEqual(endState);
   });
 });
 
@@ -90,7 +106,7 @@ const one = (num: number) => (state: StateMate): StateMate => {
   };
 };
 
-const two = (str: string, num: number) => (state: StateMate): StateMate => {
+const two = (num: number, str: string) => (state: StateMate): StateMate => {
   return {
     ...state,
     string: str,
@@ -106,63 +122,42 @@ const three = (str: string, str2: string, num: number) => (state: StateMate): St
   };
 };
 
-const { wrap, reducer } = createAtomic("test");
+const { wrap, reducer } = createAtomic("test", initialState, [one, two, three]);
 
-describe("blah", () => {
-  it("zero arity", () => {
-    const wZero = wrap(zero, "zero");
-    const oZero = wZero().meta.change(initialState);
-    expect(oZero).toEqual({
-      ...initialState,
-      number: 1
-    });
+const actions = {
+  one: wrap(one),
+  two: wrap(two),
+  three: wrap(three)
+};
+
+describe("It creates actions", () => {
+  it("Has created three actions", () => {
+    expect(actions.one).toBeDefined();
+    expect(actions.two).toBeDefined();
+    expect(actions.three).toBeDefined();
   });
-  it("single arity", () => {
-    const wOne = wrap(one, "one");
-    const oOne = wOne(100).meta.change(initialState);
-    expect(oOne).toEqual({
-      ...initialState,
-      number: 100
+
+  it("Has created three valid actions", () => {
+    expect(actions.one(1)).toEqual({
+      type: "test_one",
+      payload: [1]
     });
-  });
-  it("double arity", () => {
-    const wTwo = wrap(two, "two");
-    const oTwo = wTwo("dog", 100).meta.change(initialState);
-    expect(oTwo).toEqual({
-      ...initialState,
-      number: 100,
-      string: "dog"
+    expect(actions.two(100, "yeah")).toEqual({
+      type: "test_two",
+      payload: [100, "yeah"]
     });
-  });
-  it("third arity", () => {
-    const wThree = wrap(three, "three");
-    const oThree = wThree("dog", "face", 666).meta.change(initialState);
-    expect(oThree).toEqual({
-      ...initialState,
-      number: 666,
-      string: "dogface"
+    expect(actions.three("yeah", "no", 1)).toEqual({
+      type: "test_three",
+      payload: ["yeah", "no", 1]
     });
   });
 });
 
-describe("It creates fake actions", () => {
-  it("falls back to reducer name as action name", () => {
-    const { wrap } = createAtomic(0, "yeah");
-    const wZero = wrap(zero);
-    const action = wZero();
-    expect(action.type).toEqual("ATOMIC_yeah");
-  });
-  it("correctly uses a passed action name", () => {
-    const NICE_ACTION_NAME_BUDDY = "NICE_ACTION_NAME_BUDDY";
-    const wZero = wrap(zero, NICE_ACTION_NAME_BUDDY);
-    const action = wZero();
-    expect(action.type).toEqual(NICE_ACTION_NAME_BUDDY);
-  });
-
-  it("passes it's params as the payload", () => {
-    const NICE_ACTION_NAME_BUDDY = "NICE_ACTION_NAME_BUDDY";
-    const wThree = wrap(three, NICE_ACTION_NAME_BUDDY);
-    const action = wThree("One", "Two", 3);
-    expect(action.payload).toEqual(["One", "Two", 3]);
+describe("It responds to actions", () => {
+  it("Runs action one", () => {
+    expect(reducer(initialState, actions.one(1))).toEqual({
+      string: "",
+      number: 1
+    });
   });
 });

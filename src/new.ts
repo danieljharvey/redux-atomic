@@ -1,13 +1,3 @@
-export const REDUX_ATOMIC_ACTION = "reduxAtomic/REDUX_ATOMIC_ACTION";
-
-/**
- * The type of all values; nothing is known about it a priori
- * except that it exists. The same idea as Flow's `mixed` type.
- *
- * @see https://github.com/Microsoft/TypeScript/issues/10715
- */
-export type unknown = {} | undefined | null;
-
 export type AtomicReducerFunc<s, t> = (state: s) => s | t;
 export type AtomicReducer<s, t> = (state: s, action: AtomicAction<s, t>) => s | t;
 
@@ -28,41 +18,24 @@ export type g2<s, t, A, B> = (a: A, b: B) => AtomicAction<s, t>;
 export type g3<s, t, A, B, C> = (a: A, b: B, c: C) => AtomicAction<s, t>;
 export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t>;
 
-export type GenericFunc = (...a: any[]) => any;
+export type GenericAction<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 
-export function createAtomic<s, t>(reducerName: string, initialState: s, reducers) {
+export function createAtomic<s, t>(
+  reducerName: string,
+  initialState: s,
+  reducers: { [key: string]: GenericAction<s, t> }
+) {
   return {
     reducer,
-    actions: createActions(reducers),
-    wrapper,
-    objectWrapper
+    wrap: wrapper
   };
 
-  function reducer<s, t>(state: s, action: AtomicAction<s, t>): s | t {
+  function reducer(state: s, action: AtomicAction<s, t>): s | t {
     const thisState = state || initialState;
+    const params = action && action.payload ? action.payload : [];
     const funcKey = parseActionKeyFromType(action.type);
-    return reducers[funcKey]
-      ? reducers[funcKey](action.payload[0], action.payload[1], action.payload[2], action.payload[3])(
-          thisState
-        )
-      : thisState;
-  }
-
-  function objectWrapper<T, K extends keyof T>(obj: T) {
-    Object.keys(obj).forEach((key: K) => {
-      obj[key] = wrapper(obj[key], key);
-    });
-    return obj;
-  }
-
-  function createActions<s, t, A, B, C, D>(reducers: { [key: string]: GenericFunc }) {
-    return reducers
-      ? Object.entries(reducers).reduce((acc, action) => {
-          const [actionName, actionFunc] = action;
-          const actionCreator = wrapper(actionFunc, actionName);
-          return { ...acc, [actionName]: actionCreator };
-        }, {})
-      : {};
+    const func = funcKey in reducers ? reducers[funcKey] : false;
+    return !func || !func(...params) ? thisState : func(...params)(thisState);
   }
 
   function wrapStateFunc<s, t>(
@@ -82,13 +55,13 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     }, []);
   }
 
-  function wrapper<s, t>(func: f<s, t>, actionName: string): g<s, t>;
-  function wrapper<s, t, A>(func: f1<s, t, A>, actionName: string): g1<s, t, A>;
-  function wrapper<s, t, A, B>(func: f2<s, t, A, B>, actionName: string): g2<s, t, A, B>;
-  function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>, actionName: string): g3<s, t, A, B, C>;
-  function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>, actionName: string): g4<s, t, A, B, C, D> {
+  function wrapper<s, t>(func: f<s, t>): g<s, t>;
+  function wrapper<s, t, A>(func: f1<s, t, A>): g1<s, t, A>;
+  function wrapper<s, t, A, B>(func: f2<s, t, A, B>): g2<s, t, A, B>;
+  function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>): g3<s, t, A, B, C>;
+  function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>): g4<s, t, A, B, C, D> {
     return function(a: A, b: B, c: C, d: D) {
-      return wrapStateFunc(func(a, b, c, d), [a, b, c, d], actionName);
+      return wrapStateFunc(func(a, b, c, d), [a, b, c, d], func.name);
     };
   }
 

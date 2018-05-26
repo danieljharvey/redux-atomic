@@ -47,11 +47,21 @@ const sampleApp = combineReducers<any>({
   atomicOne: atomic1.reducer,
   atomicTwo: atomic2.reducer
 });
-/*
+
+const atomic1Actions = {
+  increment: atomic1.wrapper(increment, "increment"),
+  changeTitle: atomic1.wrapper(changeTitle, "changeTitle")
+};
+
+const atomic2Actions = {
+  increment: atomic2.wrapper(increment, "increment"),
+  changeTitle: atomic2.wrapper(changeTitle, "changeTitle")
+};
+
 describe("We're testing this approach", () => {
   it("Changes the state using a function/action thing", () => {
     let store = createStore(sampleApp);
-    store.dispatch(atomic1.actions.changeTitle("Shitter"));
+    store.dispatch(atomic1Actions.changeTitle("Shitter"));
     const state: any = store.getState();
     expect(state.atomicOne.title).toEqual("Shitter");
   });
@@ -59,14 +69,14 @@ describe("We're testing this approach", () => {
   it("Similar stores don't mess with one another", () => {
     let store = createStore(sampleApp);
 
-    store.dispatch(atomic1.actions.changeTitle("Shitter"));
-    store.dispatch(atomic2.actions.changeTitle("Shotter"));
+    store.dispatch(atomic1Actions.changeTitle("Shitter"));
+    store.dispatch(atomic2Actions.changeTitle("Shotter"));
 
     const state: any = store.getState();
     expect(state.atomicOne.title).toEqual("Shitter");
     expect(state.atomicTwo.title).toEqual("Shotter");
   });
-});*/
+});
 
 interface StateMate {
   number: number;
@@ -108,11 +118,24 @@ const three = (str: string, str2: string, num: number) => (state: StateMate): St
   };
 };
 
-const { actions, reducer } = createAtomic("test", initialState, {
+const { wrapper, reducer, objectWrapper } = createAtomic("test", initialState, {
   one,
-  two
+  two,
+  three
 });
 
+const actions = objectWrapper({
+  one,
+  two,
+  three
+});
+/*
+const actions = {
+  one: wrapper(one, "one"),
+  two: wrapper(two, "two"),
+  three: wrapper(three, "three")
+};
+*/
 describe("It creates actions", () => {
   it("Has created three actions", () => {
     expect(actions.one).toBeDefined();
@@ -125,9 +148,9 @@ describe("It creates actions", () => {
       type: "test_one",
       payload: [1]
     });
-    expect(actions.two("yeah", 1)).toEqual({
+    expect(actions.two(100, "yeah")).toEqual({
       type: "test_two",
-      payload: ["yeah", 1]
+      payload: [100, "yeah"]
     });
     expect(actions.three("yeah", "no", 1)).toEqual({
       type: "test_three",
@@ -135,6 +158,16 @@ describe("It creates actions", () => {
     });
   });
 });
+
+describe("It responds to actions", () => {
+  it("Runs action one", () => {
+    expect(reducer(initialState, actions.one(1))).toEqual({
+      string: "",
+      number: 1
+    });
+  });
+});
+
 /*
 describe("It creates fake actions", () => {
   it("falls back to reducer name as action name", () => {

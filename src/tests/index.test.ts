@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from "redux";
-import { AtomicAction, createAtomic } from "../index";
+import { AtomicAction, createAtomic, parseActionKeyFromType } from "../index";
 
 interface AtomicState {
   title: string;
@@ -159,5 +159,11 @@ describe("It responds to actions", () => {
       string: "",
       number: 1
     });
+  });
+});
+
+describe("It does not confuse reducers", () => {
+  it("Does not confuse user_hello and userAdvanced_hello", () => {
+    expect(parseActionKeyFromType("user", "userAdvanced_hello")).toEqual("");
   });
 });

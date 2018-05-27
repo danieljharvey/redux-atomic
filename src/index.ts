@@ -31,7 +31,7 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
   function reducer(state: s, action: AtomicAction<s, t>): s | t {
     const thisState = state || initialState;
     const params = action && action.payload ? action.payload : [];
-    const funcKey = parseActionKeyFromType(action.type);
+    const funcKey = parseActionKeyFromType(reducerName, action.type);
     const func = funcKey in reducerFuncs ? reducerFuncs[funcKey] : false;
     return !func || !func(...params) ? thisState : func(...params)(thisState);
   }
@@ -70,11 +70,11 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     }, {});
   }
 
-  function parseActionKeyFromType(actionType: string): string {
-    return actionType.includes(reducerName) ? actionType.substr(actionType.indexOf("_") + 1) : "";
-  }
-
   function generateKey(reducerName: string, actionName: string): string {
     return reducerName + "_" + actionName;
   }
 }
+
+export const parseActionKeyFromType = (reducerName: string, actionType: string): string => {
+  return actionType.includes(reducerName + "_") ? actionType.substr(actionType.indexOf("_") + 1) : "";
+};

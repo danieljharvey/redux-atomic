@@ -167,3 +167,10 @@ describe("It does not confuse reducers", () => {
     expect(parseActionKeyFromType("user", "userAdvanced_hello")).toEqual("");
   });
 });
+
+describe("It does not create actions for non-existant functions", () => {
+  it("Does not allow a 'two' action function to be created", () => {
+    const { wrap, reducer } = createAtomic("boo", initialState, [one]);
+    expect(wrap(two)).toThrowError();
+  });
+});

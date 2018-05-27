@@ -41,6 +41,9 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     params: any[],
     actionName: string
   ): AtomicAction<s, t> {
+    if (!funcExistsInReducer(reducerFuncs, actionName)) {
+      throw `Wrap error! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`;
+    }
     return {
       type: generateKey(reducerName, actionName),
       payload: stripUndefined(params)
@@ -77,4 +80,8 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
 
 export const parseActionKeyFromType = (reducerName: string, actionType: string): string => {
   return actionType.includes(reducerName + "_") ? actionType.substr(actionType.indexOf("_") + 1) : "";
+};
+
+const funcExistsInReducer = (reducerFuncs: {}, actionName): boolean => {
+  return Object.keys(reducerFuncs).filter(x => x === actionName).length > 0;
 };

@@ -8,11 +8,13 @@ Here is a library for helping you type less by replacing separate actions/reduce
 
 ### Like magic?
 
-Nah, nothing magic is going on, making your reducer this way means we can autocreate typed action creators so you don't need to have duplicated stuff going on between them.
+Nah, nothing magic is going on, making your reducer this way means we can autocreate typed action creators, thus saving you typing out loads of code that adds little value.
 
 ### How?
 
-Available from your favourite terminal with `npm install redux-atomic`
+Check out the [example app](https://github.com/danieljharvey/redux-atomic-example)!
+
+Or alteratively dive right in, and install it from your favourite terminal with `npm install redux-atomic`
 
 Then type something like this into a text editor or similar:
 
@@ -164,63 +166,13 @@ export actions = {
 
 I'm trying to be fair and not make some exagerated stuff, and typings do make stuff more verbose, but that's still at lot of stuff. With a few more actions you'd be irresponsible not to move the action creators and reducer into separate folders, and then all the constants need exporting/importing etc etc.
 
-### It doesn't have to be like this
-
-Using the Redux Atomic style looks more like this:
-
-```typescript
-import { createReducer } from 'redux-atomic'
-
-interface NiceState {
-    title: string
-    number: number
-}
-
-const initialState: NiceState = {
-    title: "",
-    number: 0
-}
-
-const increment = (amount: number) => (state: NiceState): NiceState =>
-    ({
-        ...state,
-        state.number + howMuch
-    })
-
-const decrement = (amount: number) => (state: NiceState): NiceState =>
-    ({
-        ...state,
-        state.number - howMuch
-    })
-
-const rename = (name: string) => (state: NiceState): NiceState =>
-    ({
-        ...state,
-        title: name
-    })
-
-const { reducer, wrap } = createReducer("niceReducer", initialState, [increment, decrement, rename])
-
-export numberReducer = reducer
-
-export actions = {
-    increment: wrap(increment),
-    decrement: wrap(decrement),
-    rename: wrap(rename)
-}
-```
-
-### That wasn't much code
-
-Totally. And it works the same, the exported actions can be dispatched like normal, and the reducer can be combined like any other. The state isn't held in any particularly magical way, so is accessed like any other.
-
 ### Can I still view these actions in Redux Dev Tools etc?
 
 Yeah sure, the auto generated actions have the format:
 
 ```typescript
 {
-    type: `${reducerName}_${actionName}`,
+    type: `reducerName_actionName`,
     payload: ["list", "of", "called", "args"]
 }
 ```

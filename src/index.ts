@@ -1,26 +1,26 @@
-export type AtomicReducerFunc<s> = (state: s) => s;
-export type AtomicReducer<s> = (state: s, action: AtomicAction<s>) => s;
+export type AtomicReducerFunc<s, t> = (state: s) => s | t;
+export type AtomicReducer<s, t> = (state: s, action: AtomicAction<s, t>) => s | t;
 
-export interface AtomicAction<s> {
+export interface AtomicAction<s, t> {
   type: string;
   payload: any[];
 }
 
-export type f<s> = () => AtomicReducerFunc<s>;
-export type f1<s, A> = (a: A) => AtomicReducerFunc<s>;
-export type f2<s, A, B> = (a: A, b: B) => AtomicReducerFunc<s>;
-export type f3<s, A, B, C> = (a: A, b: B, c: C) => AtomicReducerFunc<s>;
-export type f4<s, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicReducerFunc<s>;
+export type f<s, t> = () => AtomicReducerFunc<s, t>;
+export type f1<s, t, A> = (a: A) => AtomicReducerFunc<s, t>;
+export type f2<s, t, A, B> = (a: A, b: B) => AtomicReducerFunc<s, t>;
+export type f3<s, t, A, B, C> = (a: A, b: B, c: C) => AtomicReducerFunc<s, t>;
+export type f4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicReducerFunc<s, t>;
 
-export type g<s> = () => AtomicAction<s>;
-export type g1<s, A> = (a: A) => AtomicAction<s>;
-export type g2<s, A, B> = (a: A, b: B) => AtomicAction<s>;
-export type g3<s, A, B, C> = (a: A, b: B, c: C) => AtomicAction<s>;
-export type g4<s, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s>;
+export type g<s, t> = () => AtomicAction<s, t>;
+export type g1<s, t, A> = (a: A) => AtomicAction<s, t>;
+export type g2<s, t, A, B> = (a: A, b: B) => AtomicAction<s, t>;
+export type g3<s, t, A, B, C> = (a: A, b: B, c: C) => AtomicAction<s, t>;
+export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t>;
 
-export type GenericAction<s> = (...a: any[]) => AtomicReducerFunc<s>;
+export type GenericAction<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 
-export function createAtomic<s>(reducerName: string, initialState: s, reducers: GenericAction<s>[]) {
+export function createAtomic<s, t>(reducerName: string, initialState: s, reducers: GenericAction<s, t>[]) {
   const reducerFuncs = saveReducerFuncs(reducers);
 
   return {
@@ -28,7 +28,7 @@ export function createAtomic<s>(reducerName: string, initialState: s, reducers: 
     wrap: wrapper
   };
 
-  function reducer(state: s, action: AtomicAction<s>): s {
+  function reducer(state: s, action: AtomicAction<s, t>): s | t {
     const thisState = state || initialState;
     const params = action && action.payload ? action.payload : [];
     const funcKey = parseActionKeyFromType(reducerName, action.type);
@@ -36,7 +36,11 @@ export function createAtomic<s>(reducerName: string, initialState: s, reducers: 
     return !func || !func(...params) ? thisState : func(...params)(thisState);
   }
 
-  function wrapStateFunc<s>(func: AtomicReducerFunc<s>, params: any[], actionName: string): AtomicAction<s> {
+  function wrapStateFunc<s, t>(
+    func: AtomicReducerFunc<s, t>,
+    params: any[],
+    actionName: string
+  ): AtomicAction<s, t> {
     if (!funcExistsInReducer(reducerFuncs, actionName)) {
       throw `Wrap error! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`;
     }
@@ -52,17 +56,17 @@ export function createAtomic<s>(reducerName: string, initialState: s, reducers: 
     }, []);
   }
 
-  function wrapper<s>(func: f<s>): g<s>;
-  function wrapper<s, A>(func: f1<s, A>): g1<s, A>;
-  function wrapper<s, A, B>(func: f2<s, A, B>): g2<s, A, B>;
-  function wrapper<s, A, B, C>(func: f3<s, A, B, C>): g3<s, A, B, C>;
-  function wrapper<s, A, B, C, D>(func: f4<s, A, B, C, D>): g4<s, A, B, C, D> {
+  function wrapper<s, t>(func: f<s, t>): g<s, t>;
+  function wrapper<s, t, A>(func: f1<s, t, A>): g1<s, t, A>;
+  function wrapper<s, t, A, B>(func: f2<s, t, A, B>): g2<s, t, A, B>;
+  function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>): g3<s, t, A, B, C>;
+  function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>): g4<s, t, A, B, C, D> {
     return function(a: A, b: B, c: C, d: D) {
       return wrapStateFunc(func(a, b, c, d), [a, b, c, d], func.name);
     };
   }
 
-  function saveReducerFuncs(reducers: GenericAction<s>[]) {
+  function saveReducerFuncs(reducers: GenericAction<s, t>[]) {
     return reducers.reduce((acc, reducer) => {
       const funcName = reducer.name;
       return { ...acc, [funcName]: reducer };

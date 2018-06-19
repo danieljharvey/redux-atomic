@@ -79,7 +79,7 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
 }
 
 export const parseActionKeyFromType = (reducerName: string, actionType: string): string => {
-  return actionType.includes(reducerName + "_") ? actionType.substr(actionType.indexOf("_") + 1) : "";
+  return actionType.includes(reducerName + "_") ? actionType.substr(actionType.lastIndexOf("_") + 1) : "";
 };
 
 const funcExistsInReducer = (reducerFuncs: {}, actionName): boolean => {

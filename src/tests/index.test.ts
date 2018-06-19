@@ -166,6 +166,9 @@ describe("It does not confuse reducers", () => {
   it("Does not confuse user_hello and userAdvanced_hello", () => {
     expect(parseActionKeyFromType("user", "userAdvanced_hello")).toEqual("");
   });
+  it("Does not confuse THIS_NAME_YEAH_hello and THIS_NAME_hello", () => {
+    expect(parseActionKeyFromType("THIS_NAME_YEAH", "THIS_NAME_YEAH_hello")).toEqual("hello");
+  });
 });
 
 describe("It does not create actions for non-existant functions", () => {

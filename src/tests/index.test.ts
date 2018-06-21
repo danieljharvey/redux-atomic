@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from "redux";
-import { AtomicAction, createAtomic, parseActionKeyFromType } from "../index";
+import { AtomicAction, createAtomic, parseActionKeyFromType, StandardAction, AtomicListener } from "../index";
 
 interface AtomicState {
   title: string;
@@ -176,4 +176,30 @@ describe("It does not create actions for non-existant functions", () => {
     const { wrap, reducer } = createAtomic("boo", initialState, [one]);
     expect(wrap(two)).toThrowError();
   });
+});
+
+describe("It allows use of listener functions", () => {
+  const TEST_ACTION_TYPE = "test_action_type";
+  const testAction = {
+    type: TEST_ACTION_TYPE,
+    payload: {
+      text: "hello"
+    }
+  };
+  const testListener: AtomicListener<StateMate, StateMate> = (
+    state: StateMate,
+    action: StandardAction
+  ): StateMate => ({
+    ...state,
+    string: action.payload.text
+  });
+
+  const { wrap, reducer } = createAtomic<StateMate, StateMate>(
+    "boo",
+    initialState,
+    [one],
+    [{ type: TEST_ACTION_TYPE, func: testListener }]
+  );
+  const reply = reducer(initialState, testAction);
+  expect(reply.string).toEqual("hello");
 });

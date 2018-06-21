@@ -1,5 +1,12 @@
+export type StandardAction = {
+  type: string;
+  payload?: any;
+  error?: any;
+};
 export type AtomicReducerFunc<s, t> = (state: s) => s | t;
 export type AtomicReducer<s, t> = (state: s, action: AtomicAction<s, t>) => s | t;
+export type AtomicListener<s, t> = (state: s, action: StandardAction) => s | t;
+export type AtomicListenerObj<s, t> = { type: string; func: AtomicListener<s, t> };
 
 export interface AtomicAction<s, t> {
   type: string;
@@ -20,20 +27,26 @@ export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t
 
 export type GenericAction<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 
-export function createAtomic<s, t>(reducerName: string, initialState: s, reducers: GenericAction<s, t>[]) {
+export function createAtomic<s, t>(
+  reducerName: string,
+  initialState: s,
+  reducers: GenericAction<s, t>[],
+  listeners: AtomicListenerObj<s, t>[] = []
+) {
   const reducerFuncs = saveReducerFuncs(reducers);
+  const listenerFuncs = listeners;
 
   return {
     reducer,
     wrap: wrapper
   };
 
-  function reducer(state: s, action: AtomicAction<s, t>): s | t {
+  function reducer(state: s, action: AtomicAction<s, t> | StandardAction): s | t {
     const thisState = state || initialState;
     const params = action && action.payload ? action.payload : [];
     const funcKey = parseActionKeyFromType(reducerName, action.type);
     const func = funcKey in reducerFuncs ? reducerFuncs[funcKey] : false;
-    return !func || !func(...params) ? thisState : func(...params)(thisState);
+    return !func || !func(...params) ? runListeners(thisState, action) : func(...params)(thisState);
   }
 
   function wrapStateFunc<s, t>(
@@ -48,6 +61,13 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
       type: generateKey(reducerName, actionName),
       payload: stripUndefined(params)
     };
+  }
+
+  function runListeners(state: s, action: StandardAction): s | t {
+    return listenerFuncs.reduce((accState: s, listener: AtomicListenerObj<s, t>) => {
+      const { type, func } = listener;
+      return action.type === type ? func(accState, action) : state;
+    }, state);
   }
 
   function stripUndefined(list: any[]): any[] {

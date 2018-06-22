@@ -78,6 +78,15 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
   }
 }
 
+export const getFunctionName = <s, t>(func: GenericAction<s, t>): string => {
+  const name = func.name;
+  if (name.length < 1) {
+    throw "Cannot ascertain name of imported functions, please use `function` type instead";
+  } else {
+    return name;
+  }
+};
+
 export const parseActionKeyFromType = (reducerName: string, actionType: string): string => {
   return actionType.includes(reducerName + "_") ? actionType.substr(actionType.lastIndexOf("_") + 1) : "";
 };

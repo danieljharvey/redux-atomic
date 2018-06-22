@@ -25,9 +25,13 @@ import { createReducer } from 'redux-atomic'
 
 const initialState: number = 0;
 
-const inc = (howMuch: number) => (state: number): number => state + howMuch
+function inc(howMuch: number) {
+    return (state: number): number => state + howMuch
+}
 
-const dec = (howMuch: number) => (state: number): number => state - howMuch
+function dec(howMuch: number) {
+    return (state: number): number => state - howMuch
+}
 
 const { reducer, wrap } = createReducer("niceReducer", initialState, [inc, dec])
 
@@ -180,12 +184,12 @@ Yeah sure, the auto generated actions have the format:
 Therefore in a reducer called `niceReducer`, with a function like:
 
 ```typescript
-const newTitle = (newTitle: string) => (state: State): State => {
-  return {
+function newTitle(newTitle: string) {
+  return (state: State): State => ({
     ...state,
     title: newTitle
-  };
-};
+  });
+}
 ```
 
 ...called like this:
@@ -208,6 +212,10 @@ This would then be picked up by the `newTitle` function passed into the reducer.
 ### Anything else?
 
 Building your reducers in this way means you can have multiple instances of them that don't interact with one another, so long as they are given different names and each set of actions are exported with the matching `wrap()` function.
+
+### Why `function` and not `const` in the examples?
+
+The library uses `function.name` to name the actions, anonymous functions lose their name when imported from other files.
 
 ### Testing
 
@@ -241,7 +249,11 @@ Testing the outcome of a series of actions is as simple as composing them togeth
 import { compose } from "ramda";
 
 const initialState = { title: "blah", number: 0 };
-const bunchOfActions = compose(increment(10), decrement(20), rename("Dog"));
+const bunchOfActions = compose(
+  increment(10),
+  decrement(20),
+  rename("Dog")
+);
 const expected = { title: "Dog", number: -10 };
 
 expect(bunchOfActions(initialState)).toEqual(expected);

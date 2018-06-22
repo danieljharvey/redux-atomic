@@ -215,7 +215,7 @@ Building your reducers in this way means you can have multiple instances of them
 
 ### Why `function` and not `const` in the examples?
 
-The library uses `function.name` to name the actions, anonymous functions lose their name when imported from other files.
+The library uses `function.name` to name the actions, anonymous functions lose their name when imported from other files, this way you don't need to specifically name each action.
 
 ### Testing
 

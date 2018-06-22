@@ -25,13 +25,9 @@ import { createReducer } from 'redux-atomic'
 
 const initialState: number = 0;
 
-function inc(howMuch: number) {
-    return (state: number): number => state + howMuch
-}
+const inc = (howMuch: number) => (state: number): number => state + howMuch
 
-function dec(howMuch: number) {
-    return (state: number): number => state - howMuch
-}
+const dec = (howMuch: number) => (state: number): number => state - howMuch
 
 const { reducer, wrap } = createReducer("niceReducer", initialState, [inc, dec])
 
@@ -184,12 +180,12 @@ Yeah sure, the auto generated actions have the format:
 Therefore in a reducer called `niceReducer`, with a function like:
 
 ```typescript
-function newTitle(newTitle: string) {
-  return (state: State): State => ({
+const newTitle = (newTitle: string) => (state: State): State => {
+  return {
     ...state,
     title: newTitle
-  });
-}
+  };
+};
 ```
 
 ...called like this:
@@ -212,10 +208,6 @@ This would then be picked up by the `newTitle` function passed into the reducer.
 ### Anything else?
 
 Building your reducers in this way means you can have multiple instances of them that don't interact with one another, so long as they are given different names and each set of actions are exported with the matching `wrap()` function.
-
-### Why `function` and not `const` in the examples?
-
-The library uses `function.name` to name the actions, anonymous functions lose their name when imported from other files, this way you don't need to specifically name each action.
 
 ### Testing
 

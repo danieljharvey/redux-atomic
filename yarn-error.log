@@ -2,7 +2,7 @@ Arguments:
   /usr/local/bin/node /usr/local/bin/yarn test
 
 PATH: 
-  /Users/dhar/.local/bin:/Users/dhar/.opam/system/bin:/Users/dhar/Helpers/Scripts:/usr/local/opt/nvm/:/Users/dhar/.nvm/:/Users/dhar/.nvm:/usr/local/share/dotnet/:/Applications/Sublime Text.app/Contents/SharedSupport/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin:/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/bin:/Users/dhar/Library/Android/sdk//platform-tools:/Users/dhar/Library/Android/sdk//tools:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/share/dotnet:/Library/Frameworks/Mono.framework/Versions/Current/Commands:./node_modules/.bin
+  /Users/dhar/.psvm/current/bin:/Users/dhar/.local/bin:/Users/dhar/.opam/system/bin:/Users/dhar/Helpers/Scripts:/usr/local/opt/nvm/:/Users/dhar/.nvm/:/Users/dhar/.nvm:/usr/local/share/dotnet/:/Applications/Sublime Text.app/Contents/SharedSupport/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin:/Library/Java/JavaVirtualMachines/jdk1.8.0_144.jdk/Contents/Home/bin:/Users/dhar/Library/Android/sdk//platform-tools:/Users/dhar/Library/Android/sdk//tools:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/share/dotnet:/Library/Frameworks/Mono.framework/Versions/Current/Commands:./node_modules/.bin
 
 Yarn version: 
   1.5.1
@@ -16,7 +16,7 @@ Platform:
 npm manifest: 
   {
     "name": "redux-atomic",
-    "version": "0.0.12",
+    "version": "0.1.4",
     "description": "A nice new way to do actions",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",

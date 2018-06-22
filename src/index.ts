@@ -38,7 +38,8 @@ export function createAtomic<s, t>(
 
   return {
     reducer,
-    wrap: wrapper
+    wrap: wrapper,
+    actionTypes: getActionTypes()
   };
 
   function reducer(state: s, action: AtomicAction<s, t> | StandardAction): s | t {
@@ -55,7 +56,7 @@ export function createAtomic<s, t>(
     actionName: string
   ): AtomicAction<s, t> {
     if (!funcExistsInReducer(reducerFuncs, actionName)) {
-      throw `Wrap error! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`;
+      throw `Redux Atomic: Error in wrap for ${reducerName}! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`;
     }
     return {
       type: generateKey(reducerName, actionName),
@@ -68,6 +69,12 @@ export function createAtomic<s, t>(
       const { type, func } = listener;
       return action.type === type ? func(accState, action) : state;
     }, state);
+  }
+
+  function getActionTypes(): string[] {
+    const reducerTypes = Object.keys(reducerFuncs).map(name => generateKey(reducerName, name));
+    const listenerTypes = Object.values(listenerFuncs).map(listener => listener.type);
+    return reducerTypes.concat(listenerTypes);
   }
 
   function stripUndefined(list: any[]): any[] {
@@ -87,14 +94,24 @@ export function createAtomic<s, t>(
   }
 
   function saveReducerFuncs(reducers: GenericAction<s, t>[]) {
-    return reducers.reduce((acc, reducer) => {
-      const funcName = reducer.name;
+    return reducers.reduce((acc, reducer, index) => {
+      const funcName = getFunctionName(reducer, index, reducers.length);
       return { ...acc, [funcName]: reducer };
     }, {});
   }
 
   function generateKey(reducerName: string, actionName: string): string {
     return reducerName + "_" + actionName;
+  }
+
+  function getFunctionName<s, t>(func: GenericAction<s, t>, index: number, length: number): string {
+    const name = func.name;
+    if (name.length < 1) {
+      throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
+        1}/${length}. If it has been imported from another file please try using a 'function' instead of a 'const'`;
+    } else {
+      return name;
+    }
   }
 }
 

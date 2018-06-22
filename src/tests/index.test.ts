@@ -1,5 +1,6 @@
 import { createStore, combineReducers } from "redux";
 import { AtomicAction, createAtomic, parseActionKeyFromType, StandardAction, AtomicListener } from "../index";
+import { niceFunction, ohNo } from "./function";
 
 interface AtomicState {
   title: string;
@@ -179,27 +180,60 @@ describe("It does not create actions for non-existant functions", () => {
 });
 
 describe("It allows use of listener functions", () => {
-  const TEST_ACTION_TYPE = "test_action_type";
-  const testAction = {
-    type: TEST_ACTION_TYPE,
-    payload: {
-      text: "hello"
-    }
-  };
-  const testListener: AtomicListener<StateMate, StateMate> = (
-    state: StateMate,
-    action: StandardAction
-  ): StateMate => ({
-    ...state,
-    string: action.payload.text
+  it("Listens and reacts correctly", () => {
+    const TEST_ACTION_TYPE = "test_action_type";
+    const testAction = {
+      type: TEST_ACTION_TYPE,
+      payload: {
+        text: "hello"
+      }
+    };
+    const testListener: AtomicListener<StateMate, StateMate> = (
+      state: StateMate,
+      action: StandardAction
+    ): StateMate => ({
+      ...state,
+      string: action.payload.text
+    });
+
+    const { wrap, reducer } = createAtomic<StateMate, StateMate>(
+      "boo",
+      initialState,
+      [one],
+      [{ type: TEST_ACTION_TYPE, func: testListener }]
+    );
+    const reply = reducer(initialState, testAction);
+    expect(reply.string).toEqual("hello");
   });
 
-  const { wrap, reducer } = createAtomic<StateMate, StateMate>(
-    "boo",
-    initialState,
-    [one],
-    [{ type: TEST_ACTION_TYPE, func: testListener }]
-  );
-  const reply = reducer(initialState, testAction);
-  expect(reply.string).toEqual("hello");
+  it("Includes listeners in action type list", () => {
+    const listener = (state: StateMate): StateMate => state;
+    const SOME_SORT_OF_TYPE = "some_sort_of_type";
+    const { actionTypes } = createAtomic(
+      "boo",
+      initialState,
+      [niceFunction as any],
+      [{ type: SOME_SORT_OF_TYPE, func: listener }]
+    );
+    expect(actionTypes).toEqual(["boo_niceFunction", SOME_SORT_OF_TYPE]);
+  });
+});
+
+describe("It names a function", () => {
+  it("Gets a local function name", () => {
+    const localFunction: any = () => "horse";
+    const { actionTypes } = createAtomic("boo", initialState, [localFunction]);
+    expect(actionTypes).toEqual(["boo_localFunction"]);
+  });
+
+  it("Gets an imported function name", () => {
+    const { actionTypes } = createAtomic("boo", initialState, [niceFunction as any]);
+    expect(actionTypes).toEqual(["boo_niceFunction"]);
+  });
+
+  it("Throws an error when sent an anonymous function", () => {
+    try {
+      expect(createAtomic("boo", initialState, [ohNo as any])).toThrowError();
+    } catch {}
+  });
 });

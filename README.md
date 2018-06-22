@@ -241,7 +241,11 @@ Testing the outcome of a series of actions is as simple as composing them togeth
 import { compose } from "ramda";
 
 const initialState = { title: "blah", number: 0 };
-const bunchOfActions = compose(increment(10), decrement(20), rename("Dog"));
+const bunchOfActions = compose(
+  increment(10),
+  decrement(20),
+  rename("Dog")
+);
 const expected = { title: "Dog", number: -10 };
 
 expect(bunchOfActions(initialState)).toEqual(expected);

@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from "redux";
-import { AtomicAction, createAtomic, parseActionKeyFromType, getFunctionName } from "../index";
+import { createAtomic, parseActionKeyFromType } from "../index";
 import { niceFunction, ohNo } from "./function";
 interface AtomicState {
   title: string;
@@ -181,16 +181,18 @@ describe("It does not create actions for non-existant functions", () => {
 describe("It names a function", () => {
   it("Gets a local function name", () => {
     const localFunction: any = () => "horse";
-    expect(getFunctionName(localFunction)).toEqual("localFunction");
+    const { actionTypes } = createAtomic("boo", initialState, [localFunction]);
+    expect(actionTypes).toEqual(["boo_localFunction"]);
   });
 
   it("Gets an imported function name", () => {
-    expect(getFunctionName(niceFunction as any)).toEqual("niceFunction");
+    const { actionTypes } = createAtomic("boo", initialState, [niceFunction as any]);
+    expect(actionTypes).toEqual(["boo_niceFunction"]);
   });
 
   it("Throws an error when sent an anonymous function", () => {
     try {
-      expect(getFunctionName(ohNo as any)).toThrow();
+      expect(createAtomic("boo", initialState, [ohNo as any])).toThrowError();
     } catch {}
   });
 });

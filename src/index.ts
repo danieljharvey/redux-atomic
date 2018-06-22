@@ -25,7 +25,8 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
 
   return {
     reducer,
-    wrap: wrapper
+    wrap: wrapper,
+    actionTypes: getActionNames()
   };
 
   function reducer(state: s, action: AtomicAction<s, t>): s | t {
@@ -42,12 +43,16 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     actionName: string
   ): AtomicAction<s, t> {
     if (!funcExistsInReducer(reducerFuncs, actionName)) {
-      throw `Wrap error! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`;
+      throw `Redux Atomic: Error in wrap for ${reducerName}! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`;
     }
     return {
       type: generateKey(reducerName, actionName),
       payload: stripUndefined(params)
     };
+  }
+
+  function getActionNames() {
+    return Object.keys(reducerFuncs).map(name => generateKey(reducerName, name));
   }
 
   function stripUndefined(list: any[]): any[] {
@@ -67,8 +72,8 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
   }
 
   function saveReducerFuncs(reducers: GenericAction<s, t>[]) {
-    return reducers.reduce((acc, reducer) => {
-      const funcName = reducer.name;
+    return reducers.reduce((acc, reducer, index) => {
+      const funcName = getFunctionName(reducer, index, reducers.length);
       return { ...acc, [funcName]: reducer };
     }, {});
   }
@@ -76,16 +81,16 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
   function generateKey(reducerName: string, actionName: string): string {
     return reducerName + "_" + actionName;
   }
-}
-
-export const getFunctionName = <s, t>(func: GenericAction<s, t>): string => {
-  const name = func.name;
-  if (name.length < 1) {
-    throw "Cannot ascertain name of imported functions, please use `function` type instead";
-  } else {
-    return name;
+  function getFunctionName<s, t>(func: GenericAction<s, t>, index: number, length: number): string {
+    const name = func.name;
+    if (name.length < 1) {
+      throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
+        1}/${length}. If it has been imported from another file please try using a 'function' instead of a 'const'`;
+    } else {
+      return name;
+    }
   }
-};
+}
 
 export const parseActionKeyFromType = (reducerName: string, actionType: string): string => {
   return actionType.includes(reducerName + "_") ? actionType.substr(actionType.lastIndexOf("_") + 1) : "";

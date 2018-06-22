@@ -77,7 +77,6 @@ Let's look at a code example for a basic reducer with actions in the full-fat Re
 ```typescript
 const MAKE_THE_NUMBER_BIGGER = "someSortOf.NameSpace.MAKE_THE_NUMBER_BIGGER"
 const MAKE_THE_NUMBER_SMALLER = "someSortOf.NameSpace.MAKE_THE_NUMBER_SMALLER"
-const CHANGE_THE_NAME = "someSortOf.NameSpace.CHANGE_THE_NAME"
 
 interface NumberBiggener {
     type: typeof MAKE_THE_NUMBER_BIGGER
@@ -107,49 +106,17 @@ const numberSmallener = (howMuch: number) => ({
     }
 })
 
-interface NameChanger {
-    type: typeof CHANGE_THE_NAME,
-    payload: {
-        title: string
-    }
-}
+type NiceState = number
 
-const nameChanged = (title: string) => ({
-    type: CHANGE_THE_NAME,
-    payload: {
-        title
-    }
-})
-
-interface NiceState {
-    title: string
-    number: number
-}
-
-const initialState: NiceState = {
-    title: "",
-    number: 0
-}
+const initialState: NiceState = 0
 
 function numberReducer(state: NiceState, action: NumberBiggener | NumberSmallener ): NiceState {
   switch (action.type) {
       case MAKE_THE_NUMBER_BIGGER:
-        return {
-            ...state,
-            number: state.number + action.payload.howMuch
-        }
+        return state + action.payload.howMuch
 
     case MAKE_THE_NUMBER_SMALLER:
-        return {
-            ...state,
-            number: state.number - action.payload.howMuch
-        }
-
-    case CHANGE_THE_NAME:
-        return {
-            ...state,
-            title: action.payload.title
-        }
+        return state - action.payload.howMuch
 
     default:
         return state;
@@ -159,12 +126,11 @@ function numberReducer(state: NiceState, action: NumberBiggener | NumberSmallene
 export numberReducer;
 export actions = {
     numberBiggener,
-    numberSmallener,
-    nameChanger
+    numberSmallener
 }
 ```
 
-I'm trying to be fair and not make some exagerated stuff, and typings do make stuff more verbose, but that's still at lot of stuff. With a few more actions you'd be irresponsible not to move the action creators and reducer into separate folders, and then all the constants need exporting/importing etc etc.
+The names are a bit ridiculous, granted, and typings do make stuff more verbose, but that's still at lot of stuff. With a few more actions you'd be irresponsible not to move the action creators and reducer into separate folders, and then all the constants need exporting/importing etc etc.
 
 ### Can I still view these actions in Redux Dev Tools etc?
 

@@ -20,6 +20,9 @@ export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t
 
 export type GenericAction<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 
+// please forgive this mutable state
+// it records all reducer names to avoid duplicates
+// and the weird errors that result
 let allNames = [];
 
 export function createAtomic<s, t>(reducerName: string, initialState: s, reducers: GenericAction<s, t>[]) {

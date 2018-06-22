@@ -1,6 +1,7 @@
 import { createStore, combineReducers } from "redux";
 import { createAtomic, parseActionKeyFromType } from "../index";
 import { niceFunction, ohNo } from "./function";
+
 interface AtomicState {
   title: string;
   arrayOfStrings: string[];

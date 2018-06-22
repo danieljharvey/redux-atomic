@@ -20,9 +20,11 @@ export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t
 
 export type GenericAction<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 
+let allNames = [];
+
 export function createAtomic<s, t>(reducerName: string, initialState: s, reducers: GenericAction<s, t>[]) {
   const reducerFuncs = saveReducerFuncs(reducers);
-
+  checkExistingName(reducerName);
   return {
     reducer,
     wrap: wrapper,
@@ -81,6 +83,7 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
   function generateKey(reducerName: string, actionName: string): string {
     return reducerName + "_" + actionName;
   }
+
   function getFunctionName<s, t>(func: GenericAction<s, t>, index: number, length: number): string {
     const name = func.name;
     if (name.length < 1) {
@@ -89,6 +92,13 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     } else {
       return name;
     }
+  }
+
+  function checkExistingName(reducerName: string) {
+    if (allNames.includes(reducerName)) {
+      throw `Redux Atomic: Error in createAtomic for ${reducerName}! A reducer with this name already exists!`;
+    }
+    allNames.push(reducerName);
   }
 }
 

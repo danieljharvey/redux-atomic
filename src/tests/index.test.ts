@@ -193,7 +193,30 @@ describe("It names a function", () => {
 
   it("Throws an error when sent an anonymous function", () => {
     try {
-      createAtomic("boo", initialState, [ohNo as any]);
+      createAtomic("boo4", initialState, [ohNo as any]);
+      expect(true).toBeTruthy();
+    } catch {
+      expect.assertions(0);
+    }
+  });
+
+  it("Does not throws an error when sent an anonymous function but is named", () => {
+    const { actionTypes } = createAtomic("boo5", initialState, [
+      niceFunction as any,
+      { name: "ohNo", func: ohNo as any }
+    ]);
+    const action = {
+      type: "boo5_ohNo",
+      payload: []
+    };
+    expect(actionTypes).toEqual(["boo5_niceFunction", "boo5_ohNo"]);
+    // and it still works...
+    expect(reducer(initialState, action)).toEqual("what");
+  });
+
+  it.only("Throws an error when total nonsense is sent instead of a function", () => {
+    try {
+      createAtomic("boo6", initialState, ["nonsense"] as any);
       expect(true).toBeTruthy();
     } catch {
       expect.assertions(0);

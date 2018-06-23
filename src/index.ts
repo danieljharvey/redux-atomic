@@ -66,14 +66,25 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     }, []);
   }
 
-  function wrapper<s, t>(func: f<s, t>): g<s, t>;
-  function wrapper<s, t, A>(func: f1<s, t, A>): g1<s, t, A>;
-  function wrapper<s, t, A, B>(func: f2<s, t, A, B>): g2<s, t, A, B>;
-  function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>): g3<s, t, A, B, C>;
-  function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>): g4<s, t, A, B, C, D> {
+  function wrapper<s, t>(func: f<s, t>, actionName?: string): g<s, t>;
+  function wrapper<s, t, A>(func: f1<s, t, A>, actionName?: string): g1<s, t, A>;
+  function wrapper<s, t, A, B>(func: f2<s, t, A, B>, actionName?: string): g2<s, t, A, B>;
+  function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>, actionName?: string): g3<s, t, A, B, C>;
+  function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>, actionName?: string): g4<s, t, A, B, C, D> {
     return function(a: A, b: B, c: C, d: D) {
-      return wrapStateFunc(func(a, b, c, d), [a, b, c, d], func.name);
+      return wrapStateFunc(func(a, b, c, d), [a, b, c, d], getActionName(func, actionName));
     };
+  }
+
+  function getActionName(func, actionName?: string) {
+    const name = func.name;
+    if (name.length > 0) {
+      return name;
+    }
+    if (actionName.length > 0) {
+      return actionName;
+    }
+    throw `Redux Atomic: Error in wrap for ${reducerName}! Could not ascertain name of function - if you are using imported const functions please provide an explicit name to wrap, ie wrap(function, 'functionName')`;
   }
 
   function saveReducerFuncs(reducers: GenericAction<s, t>[]) {

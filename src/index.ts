@@ -21,6 +21,7 @@ export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t
 export type GenericAction<s, t> = GenericActionFunc<s, t> | GenericActionDescriber<s, t>;
 export type GenericActionFunc<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 export type GenericActionDescriber<s, t> = { name: string; func: GenericActionFunc<s, t> };
+
 // please forgive this mutable state
 // it records all reducer names to avoid duplicates
 // and the weird errors that result
@@ -28,7 +29,9 @@ let allNames = [];
 
 export function createAtomic<s, t>(reducerName: string, initialState: s, reducers: GenericAction<s, t>[]) {
   const reducerFuncs = saveReducerFuncs(reducers);
+
   checkExistingName(reducerName);
+
   return {
     reducer,
     wrap: wrapper,
@@ -72,17 +75,17 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
   function wrapper<s, t, A, B>(func: f2<s, t, A, B>, actionName?: string): g2<s, t, A, B>;
   function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>, actionName?: string): g3<s, t, A, B, C>;
   function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>, actionName?: string): g4<s, t, A, B, C, D> {
+    const funcName = getActionName(func, actionName);
     return function(a: A, b: B, c: C, d: D) {
-      return wrapStateFunc(func(a, b, c, d), [a, b, c, d], getActionName(func, actionName));
+      return wrapStateFunc(func(a, b, c, d), [a, b, c, d], funcName);
     };
   }
 
   function getActionName(func, actionName?: string) {
-    const name = func.name;
-    if (name.length > 0) {
-      return name;
+    if (func.name && func.name.length > 0) {
+      return func.name;
     }
-    if (actionName.length > 0) {
+    if (actionName && actionName.length > 0) {
       return actionName;
     }
     throw `Redux Atomic: Error in wrap for ${reducerName}! Could not ascertain name of function - if you are using imported const functions please provide an explicit name to wrap, ie wrap(function, 'functionName')`;

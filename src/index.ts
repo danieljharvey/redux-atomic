@@ -18,8 +18,9 @@ export type g2<s, t, A, B> = (a: A, b: B) => AtomicAction<s, t>;
 export type g3<s, t, A, B, C> = (a: A, b: B, c: C) => AtomicAction<s, t>;
 export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t>;
 
-export type GenericAction<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
-
+export type GenericAction<s, t> = GenericActionFunc<s, t> | GenericActionDescriber<s, t>;
+export type GenericActionFunc<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
+export type GenericActionDescriber<s, t> = { name: string; func: GenericActionFunc<s, t> };
 // please forgive this mutable state
 // it records all reducer names to avoid duplicates
 // and the weird errors that result
@@ -90,7 +91,8 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
   function saveReducerFuncs(reducers: GenericAction<s, t>[]) {
     return reducers.reduce((acc, reducer, index) => {
       const funcName = getFunctionName(reducer, index, reducers.length);
-      return { ...acc, [funcName]: reducer };
+      const reducerFunc = getFunction(reducer, index, reducers.length);
+      return { ...acc, [funcName]: reducerFunc };
     }, {});
   }
 
@@ -98,11 +100,22 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     return reducerName + "_" + actionName;
   }
 
+  function getFunction<s, t>(func: GenericAction<s, t>, index: number, length: number) {
+    if (typeof func === "function") {
+      return func;
+    } else if (typeof func === "object" && typeof func.func === "function") {
+      return func.func;
+    } else {
+      throw `Redux Atomic: Error in createAtomic for ${reducerName}! Item ${index +
+        1}/${length} is not a valid function. Please pass in an array of functions or objects in the form: '{name: 'niceFunction', func: 'niceFunction'}'`;
+    }
+  }
+
   function getFunctionName<s, t>(func: GenericAction<s, t>, index: number, length: number): string {
-    const name = func.name;
+    const name = func.name || "";
     if (name.length < 1) {
       throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
-        1}/${length}. If it has been imported from another file please try using a 'function' instead of a 'const'`;
+        1}/${length}. If it has been imported from another file please try using a 'function' instead of a 'const', or explicitly pass the name in the form '{name: 'niceFunction', func: 'niceFunction'}'`;
     } else {
       return name;
     }

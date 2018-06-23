@@ -235,6 +235,23 @@ describe("Names in wrap", () => {
       expect.assertions(0);
     }
   });
+
+  it("Doesn't errors when using named anonymous function", () => {
+    const { wrap } = createAtomic("boo8", initialState, [{ name: "ohNo", func: ohNo as any }]);
+
+    wrap(ohNo, "ohNo");
+    expect(true).toBeTruthy();
+  });
+
+  it.only("Errors when using a name that has not been used in the reducer", () => {
+    const { wrap } = createAtomic("boo9", initialState, [{ name: "ohNo", func: ohNo as any }]);
+    try {
+      wrap(ohNo, "ohNo2");
+      expect(true).toBeTruthy();
+    } catch {
+      expect.assertions(0);
+    }
+  });
 });
 
 describe("It spots multiple reducers with same name", () => {

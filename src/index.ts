@@ -76,9 +76,19 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
   function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>, actionName?: string): g3<s, t, A, B, C>;
   function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>, actionName?: string): g4<s, t, A, B, C, D> {
     const funcName = getActionName(func, actionName);
+    checkActionNameExists(funcName);
     return function(a: A, b: B, c: C, d: D) {
       return wrapStateFunc(func(a, b, c, d), [a, b, c, d], funcName);
     };
+  }
+
+  function checkActionNameExists(funcName: string) {
+    if (!isActionNameFound(funcName)) {
+      throw `Redux Atomic: Error in wrap for ${reducerName}! Could not wrap function ${funcName} as it has not been passed to createAtomic();`;
+    }
+  }
+  function isActionNameFound(funcName: string) {
+    return Object.keys(reducerFuncs).some((key: string) => key === funcName);
   }
 
   function getActionName(func, actionName?: string) {

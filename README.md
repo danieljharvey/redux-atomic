@@ -234,11 +234,13 @@ const { actionTypes } = createAtomic("hello", state, [great, job, nice, function
 // actionTypes == ['hello_great', 'hello_job', 'hello_nice', 'hello_functions']
 ```
 
-#### `wrap(reducerFunction)`
+#### `wrap(reducerFunction, actionName)`
 
 ##### Parameters:
 
 `reducerFunction` is the reducer action you wish to wrap and turn into a dispatchable action. It must take some number of parameters, and returns a function which turns state into new state.
+
+`actionName` is optional - you will only need to provide it if the function is a const function imported from another file so we cannot work it out automatically. It should match the name you passed to `createAtomic`, and will throw an error if not.
 
 ##### Returns:
 

@@ -281,6 +281,10 @@ The array shape will work for types of `Function` or anonymous lambda functions 
 
 As Redux Atomic creates regular Flux actions under the hood, having two reducers with the same names means they will both pick up some of the same functions and things can quickly get messy and quite confusing. This error will be thrown if you try and do this.
 
+#### `Redux Atomic: Error in wrap for niceReducer! Could not wrap function greatFunction as it has not been passed to createAtomic();`;
+
+This is to make sure we don't end up with names not matching between passing to createAtomic() and wrap(). If this occurs - check you've sent the function you intend to wrap and any passed names match.
+
 ### Anything else?
 
 Building your reducers in this way means you can have multiple instances of them that don't interact with one another, so long as they are given different names and each set of actions are exported with the matching `wrap()` function.

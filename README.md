@@ -1,4 +1,4 @@
-# Redux Atomic
+# Redux Atomic <img src="https://travis-ci.org/danieljharvey/redux-atomic.svg?branch=master" alt="build:started">
 
 ## "Give Those Typing Hands A Break"
 

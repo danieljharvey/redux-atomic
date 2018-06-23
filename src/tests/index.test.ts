@@ -1,6 +1,7 @@
 import { createStore, combineReducers } from "redux";
 import { createAtomic, parseActionKeyFromType } from "../index";
 import { niceFunction, ohNo } from "./function";
+
 interface AtomicState {
   title: string;
   arrayOfStrings: string[];
@@ -181,18 +182,34 @@ describe("It does not create actions for non-existant functions", () => {
 describe("It names a function", () => {
   it("Gets a local function name", () => {
     const localFunction: any = () => "horse";
-    const { actionTypes } = createAtomic("boo", initialState, [localFunction]);
-    expect(actionTypes).toEqual(["boo_localFunction"]);
+    const { actionTypes } = createAtomic("boo2", initialState, [localFunction]);
+    expect(actionTypes).toEqual(["boo2_localFunction"]);
   });
 
   it("Gets an imported function name", () => {
-    const { actionTypes } = createAtomic("boo", initialState, [niceFunction as any]);
-    expect(actionTypes).toEqual(["boo_niceFunction"]);
+    const { actionTypes } = createAtomic("boo3", initialState, [niceFunction as any]);
+    expect(actionTypes).toEqual(["boo3_niceFunction"]);
   });
 
   it("Throws an error when sent an anonymous function", () => {
     try {
-      expect(createAtomic("boo", initialState, [ohNo as any])).toThrowError();
-    } catch {}
+      createAtomic("boo", initialState, [ohNo as any]);
+      expect(true).toBeTruthy();
+    } catch {
+      expect.assertions(0);
+    }
+  });
+});
+
+describe("It spots multiple reducers with same name", () => {
+  it("Throws an error", () => {
+    const localFunction: any = () => "horse";
+    const { actionTypes } = createAtomic("wooo", initialState, [localFunction as any]);
+    try {
+      expect(createAtomic("wooo", initialState, [niceFunction as any])).toThrowError();
+      expect(true).toBeTruthy();
+    } catch {
+      expect.assertions(0);
+    }
   });
 });

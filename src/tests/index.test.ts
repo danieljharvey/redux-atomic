@@ -201,22 +201,52 @@ describe("It names a function", () => {
   });
 
   it("Does not throws an error when sent an anonymous function but is named", () => {
-    const { actionTypes } = createAtomic("boo5", initialState, [
+    const { actionTypes, reducer } = createAtomic("boo5", initialState, [
       niceFunction as any,
       { name: "ohNo", func: ohNo as any }
     ]);
+    const boo5Reducer = reducer;
     const action = {
       type: "boo5_ohNo",
       payload: []
     };
     expect(actionTypes).toEqual(["boo5_niceFunction", "boo5_ohNo"]);
     // and it still works...
-    expect(reducer(initialState, action)).toEqual("what");
+    expect(boo5Reducer(initialState, action)).toEqual("what");
   });
 
-  it.only("Throws an error when total nonsense is sent instead of a function", () => {
+  it("Throws an error when total nonsense is sent instead of a function", () => {
     try {
       createAtomic("boo6", initialState, ["nonsense"] as any);
+      expect(true).toBeTruthy();
+    } catch {
+      expect.assertions(0);
+    }
+  });
+});
+
+describe("Names in wrap", () => {
+  it("Errors on finding anonymous function", () => {
+    const { wrap } = createAtomic("boo7", initialState, [{ name: "ohNo", func: ohNo as any }]);
+    try {
+      wrap(ohNo);
+      expect(true).toBeTruthy();
+    } catch {
+      expect.assertions(0);
+    }
+  });
+
+  it("Doesn't errors when using named anonymous function", () => {
+    const { wrap } = createAtomic("boo8", initialState, [{ name: "ohNo", func: ohNo as any }]);
+
+    wrap(ohNo, "ohNo");
+    expect(true).toBeTruthy();
+  });
+
+  it.only("Errors when using a name that has not been used in the reducer", () => {
+    const { wrap } = createAtomic("boo9", initialState, [{ name: "ohNo", func: ohNo as any }]);
+    try {
+      wrap(ohNo, "ohNo2");
       expect(true).toBeTruthy();
     } catch {
       expect.assertions(0);

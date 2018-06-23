@@ -166,6 +166,10 @@ export actions = {
 
 I'm trying to be fair and not make some exagerated stuff, and typings do make stuff more verbose, but that's still at lot of stuff. With a few more actions you'd be irresponsible not to move the action creators and reducer into separate folders, and then all the constants need exporting/importing etc etc.
 
+### Surely working in this way ties each action to each reducer?
+
+Yes true. It's not to say that having one action that affects multiple reducers is not useful, but is quite rare - Redux Atomic's aim is to make the 90% case of 1-1 action-reducer relationships easier to do.
+
 ### Can I still view these actions in Redux Dev Tools etc?
 
 Yeah sure, the auto generated actions have the format:
@@ -204,6 +208,84 @@ Would produce an action like
 ```
 
 This would then be picked up by the `newTitle` function passed into the reducer.
+
+### API reference
+
+#### `createAtomic(reducerName, initialState, reducers)`
+
+##### Parameters:
+
+`reducerName` is the name of your reducer - it must be unique across the application.
+
+`initialState` is the starting data state of your reducer.
+
+`reducers` is how you provide your functionality to Redux Atomic. Pass them in as an array of reducer functions, or an array of objects in this format: `{name: 'niceFunction', func: niceFunction}`.
+
+##### Returns:
+
+`reducer` - your reducer function to connect with `combineReducers` etc, that can be passed actions in the regular `(state, action) => state` type manner.
+
+`wrap` - function for wrapping your reducer functions and auto-creating actions. See below for usage.
+
+`actionTypes` - an array of strings with the type of each action that your reducer responds to - mostly provided for debugging purposes, ie
+
+```typescript
+const { actionTypes } = createAtomic("hello", state, [great, job, nice, functions]);
+// actionTypes == ['hello_great', 'hello_job', 'hello_nice', 'hello_functions']
+```
+
+#### `wrap(reducerFunction, actionName)`
+
+##### Parameters:
+
+`reducerFunction` is the reducer action you wish to wrap and turn into a dispatchable action. It must take some number of parameters, and returns a function which turns state into new state.
+
+`actionName` is optional - you will only need to provide it if the function is a const function imported from another file so we cannot work it out automatically. It should match the name you passed to `createAtomic`, and will throw an error if not.
+
+##### Returns:
+
+A dispatchable action for your function, which expects the same parameters as your reducer function.
+
+### Errors you may see and what they are
+
+#### `Redux Atomic: Error in wrap for niceReducer! niceFunction cannot be found. Did you remember to pass it to 'createAtomic()'?`
+
+You have tried to wrap a function that has not been passed to the reducer. Make sure your function is passed to the 'reducers' array in createAtomic()
+
+#### `Redux Atomic: Error in createAtomic for niceReducer! Item 2/4 is not a valid function. Please pass in an array of functions or objects in the form: '{name: 'niceFunction', func: 'niceFunction'}'`
+
+You have passed something which is not a function to createAtomic().
+
+#### `Redux Atomic: Error in createAtomic for niceReducer! Could not ascertain name of function 2/4. If it has been imported from another file please try using a 'function' instead of a 'const', or explicitly pass the name in the form '{name: 'niceFunction', func: 'niceFunction'}'`;
+
+Similar to above. Valid data shapes are
+
+```typescript
+const reducerFunctions = [myNiceFunction, otherFunction, greatJob];
+const { reducer } = createAtomic("yeah", initialState, reducerFunctions);
+```
+
+or
+
+```typescript
+const objectShapedReducerFunctions = [
+  { name: "myNiceFunction", func: myNiceFunction },
+  { name: "otherFunction", func: otherFunction },
+  { name: "greatJob", func: greatJob }
+];
+
+const { reducer } = createAtomic("yeah2", initialState, objectShapedReducerFunctions);
+```
+
+The array shape will work for types of `Function` or anonymous lambda functions declared in the same file. If you have imported anonymous functions from another file, JS loses the name in transit and thus it must be specified.
+
+#### `Redux Atomic: Error in createAtomic for niceReducer! A reducer with this name already exists!`
+
+As Redux Atomic creates regular Flux actions under the hood, having two reducers with the same names means they will both pick up some of the same functions and things can quickly get messy and quite confusing. This error will be thrown if you try and do this.
+
+#### `Redux Atomic: Error in wrap for niceReducer! Could not wrap function greatFunction as it has not been passed to createAtomic();`;
+
+This is to make sure we don't end up with names not matching between passing to createAtomic() and wrap(). If this occurs - check you've sent the function you intend to wrap and any passed names match.
 
 ### Anything else?
 

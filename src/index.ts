@@ -40,14 +40,22 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
 
   function reducer(state: s, action: AtomicAction<s, t>): s | t {
     const thisState = state || initialState;
-    const params = action && action.payload ? action.payload : [];
+    const params = cleanParams(action && action.payload ? action.payload : []);
     const funcKey = parseActionKeyFromType(reducerName, action.type);
     const func = funcKey in reducerFuncs ? reducerFuncs[funcKey] : false;
-    return isFunctionValid(func, params) ? func.apply(void 0, [params])(thisState) : thisState;
+    if (!func) {
+      return thisState;
+    }
+    const atomicFunc = isFunctionValid(func, params);
+    return atomicFunc ? atomicFunc(thisState) : thisState;
   }
 
-  function isFunctionValid(func, params) {
-    return func && func.apply(void 0, [params]);
+  function isFunctionValid(func: GenericAction<s, t>, params: any[]): AtomicReducerFunc<s, t> | false {
+    return typeof func === "function" ? func.apply(void 0, params) : false;
+  }
+
+  function cleanParams(params: any[] | any): any[] {
+    return Array.isArray(params) ? params : [params];
   }
 
   function wrapStateFunc<s, t>(
@@ -95,7 +103,7 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     return Object.keys(reducerFuncs).some((key: string) => key === funcName);
   }
 
-  function getActionName(func, actionName?: string) {
+  function getActionName(func: (...any: any[]) => any, actionName?: string) {
     if (func.name && func.name.length > 0) {
       return func.name;
     }

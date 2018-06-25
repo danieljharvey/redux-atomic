@@ -43,7 +43,11 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     const params = action && action.payload ? action.payload : [];
     const funcKey = parseActionKeyFromType(reducerName, action.type);
     const func = funcKey in reducerFuncs ? reducerFuncs[funcKey] : false;
-    return !func || !func(...params) ? thisState : func(...params)(thisState);
+    return isFunctionValid(func, params) ? func.apply(void 0, [params])(thisState) : thisState;
+  }
+
+  function isFunctionValid(func, params) {
+    return func && func.apply(void 0, [params]);
   }
 
   function wrapStateFunc<s, t>(

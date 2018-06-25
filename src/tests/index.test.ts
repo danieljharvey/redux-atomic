@@ -161,6 +161,12 @@ describe("It responds to actions", () => {
       number: 1
     });
   });
+  it("Runs action three", () => {
+    expect(reducer(initialState, actions.three("hum", "drum", 65))).toEqual({
+      string: "humdrum",
+      number: 65
+    });
+  });
 });
 
 describe("It does not confuse reducers", () => {

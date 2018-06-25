@@ -103,7 +103,7 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     return Object.keys(reducerFuncs).some((key: string) => key === funcName);
   }
 
-  function getActionName(func, actionName?: string) {
+  function getActionName(func: (...any: any[]) => any, actionName?: string) {
     if (func.name && func.name.length > 0) {
       return func.name;
     }

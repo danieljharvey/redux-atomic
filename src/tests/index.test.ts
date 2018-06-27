@@ -2,7 +2,8 @@ import { createStore } from "redux";
 import { createAtomic, parseActionKeyFromType } from "../index";
 import { niceFunction, ohNo } from "./function";
 
-import { sampleApp, atomic1, atomic1Actions, atomic2Actions } from "./testReducer";
+import { sampleApp, atomic1, atomic1Actions, atomic2Actions } from "./atomicReducerTest";
+import { initialState, stateMateActions, stateMateReducer } from "./stateMateReducerTest";
 
 describe("We're testing this approach", () => {
   it("Creates the expected actions", () => {
@@ -38,75 +39,23 @@ describe("We're testing this approach", () => {
   });
 });
 
-interface StateMate {
-  number: number;
-  string: string;
-}
-
-const initialState: StateMate = {
-  number: 0,
-  string: ""
-};
-
-const zero = () => (state: StateMate): StateMate => {
-  return {
-    ...state,
-    number: state.number + 1
-  };
-};
-
-const one = (num: number) => (state: StateMate): StateMate => {
-  return {
-    ...state,
-    number: state.number + num
-  };
-};
-
-const two = (num: number, str: string) => (state: StateMate): StateMate => {
-  return {
-    ...state,
-    string: str,
-    number: num
-  };
-};
-
-const three = (str: string, str2: string, num: number) => (state: StateMate): StateMate => {
-  return {
-    ...state,
-    string: str + str2,
-    number: num
-  };
-};
-
-const { wrap, reducer } = createAtomic("test", initialState, [
-  { name: "one", func: one },
-  { name: "two", func: two },
-  { name: "three", func: three }
-]);
-
-const actions = {
-  one: wrap(one, "one"),
-  two: wrap(two, "two"),
-  three: wrap(three, "three")
-};
-
 describe("It creates actions", () => {
   it("Has created three actions", () => {
-    expect(actions.one).toBeDefined();
-    expect(actions.two).toBeDefined();
-    expect(actions.three).toBeDefined();
+    expect(stateMateActions.one).toBeDefined();
+    expect(stateMateActions.two).toBeDefined();
+    expect(stateMateActions.three).toBeDefined();
   });
 
   it("Has created three valid actions", () => {
-    expect(actions.one(1)).toEqual({
+    expect(stateMateActions.one(1)).toEqual({
       type: "test_one",
       payload: [1]
     });
-    expect(actions.two(100, "yeah")).toEqual({
+    expect(stateMateActions.two(100, "yeah")).toEqual({
       type: "test_two",
       payload: [100, "yeah"]
     });
-    expect(actions.three("yeah", "no", 1)).toEqual({
+    expect(stateMateActions.three("yeah", "no", 1)).toEqual({
       type: "test_three",
       payload: ["yeah", "no", 1]
     });
@@ -115,13 +64,13 @@ describe("It creates actions", () => {
 
 describe("It responds to actions", () => {
   it("Runs action one", () => {
-    expect(reducer(initialState, actions.one(1))).toEqual({
+    expect(stateMateReducer(initialState, stateMateActions.one(1))).toEqual({
       string: "",
       number: 1
     });
   });
   it("Runs action three", () => {
-    expect(reducer(initialState, actions.three("hum", "drum", 65))).toEqual({
+    expect(stateMateReducer(initialState, stateMateActions.three("hum", "drum", 65))).toEqual({
       string: "humdrum",
       number: 65
     });

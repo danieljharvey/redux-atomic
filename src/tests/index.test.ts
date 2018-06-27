@@ -1,66 +1,14 @@
-import { createStore, combineReducers } from "redux";
+import { createStore } from "redux";
 import { createAtomic, parseActionKeyFromType } from "../index";
 import { niceFunction, ohNo } from "./function";
 
-interface AtomicState {
-  title: string;
-  arrayOfStrings: string[];
-  counter: number;
-  subObject: {
-    title: string;
-    age: number;
-  };
-}
-
-const initialAtomicState: AtomicState = {
-  title: "",
-  arrayOfStrings: [],
-  counter: 0,
-  subObject: {
-    title: "",
-    age: 0
-  }
-};
-const increment = () => (state: AtomicState): AtomicState => {
-  return {
-    ...state,
-    counter: state.counter + 1
-  };
-};
-
-const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
-  return {
-    ...state,
-    title
-  };
-};
-
-const atomic1 = createAtomic("atomic1", initialAtomicState, [
-  { name: "increment", func: increment },
-  { name: "changeTitle", func: changeTitle }
-]);
-
-const atomic2 = createAtomic("atomic2", initialAtomicState, [
-  { name: "increment", func: increment },
-  { name: "changeTitle", func: changeTitle }
-]);
-
-const sampleApp = combineReducers<any>({
-  atomicOne: atomic1.reducer,
-  atomicTwo: atomic2.reducer
-});
-
-const atomic1Actions = {
-  increment: atomic1.wrap(increment, "increment"),
-  changeTitle: atomic1.wrap(changeTitle, "changeTitle")
-};
-
-const atomic2Actions = {
-  increment: atomic2.wrap(increment, "increment"),
-  changeTitle: atomic2.wrap(changeTitle, "changeTitle")
-};
+import { sampleApp, atomic1, atomic1Actions, atomic2Actions } from "./testReducer";
 
 describe("We're testing this approach", () => {
+  it("Creates the expected actions", () => {
+    expect(atomic1.actionTypes).toEqual(["atomic1_increment", "atomic1_changeTitle"]);
+  });
+
   it("Changes the state using a function/action thing", () => {
     let store = createStore(sampleApp);
     store.dispatch(atomic1Actions.changeTitle("Shitter"));
@@ -84,19 +32,6 @@ describe("We're testing this approach", () => {
 
     const firstState: any = store.getState();
     store.dispatch({ type: "sdfslkdfklslkdflk;sfd" });
-
-    const endState: any = store.getState();
-    expect(firstState).toEqual(endState);
-  });
-
-  it("doesn't break when provided a thunk", () => {
-    let store = createStore(sampleApp);
-
-    const firstState: any = store.getState();
-    const thunk: any = () => {
-      return 0;
-    };
-    store.dispatch(thunk);
 
     const endState: any = store.getState();
     expect(firstState).toEqual(endState);
@@ -199,18 +134,6 @@ describe("It does not confuse reducers", () => {
   });
   it("Does not confuse THIS_NAME_YEAH_hello and THIS_NAME_hello", () => {
     expect(parseActionKeyFromType("THIS_NAME_YEAH", "THIS_NAME_YEAH_hello")).toEqual("hello");
-  });
-});
-
-describe("It does not create actions for non-existant functions", () => {
-  it("Does not allow a 'two' action function to be created", () => {
-    const { wrap, reducer } = createAtomic("boo", initialState, [{ name: "one", func: one }]);
-    try {
-      expect(wrap(two, "two")).toThrowError();
-      expect(true).toBeTruthy();
-    } catch {
-      expect.assertions(0);
-    }
   });
 });
 

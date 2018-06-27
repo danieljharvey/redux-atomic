@@ -23,7 +23,7 @@ export type GenericActionDescriber<s, t> = { name: string; func: GenericActionFu
 
 const warning = (string: string) => {
   if (typeof console !== "undefined" && typeof console.error === "function") {
-    console.error(warning);
+    console.error(string);
   }
 };
 
@@ -38,7 +38,6 @@ export function createAtomic<s, t>(
   reducers: GenericActionDescriber<s, t>[]
 ) {
   const reducerFuncs = saveReducerFuncs(reducers);
-
   checkExistingName(reducerName);
 
   return {
@@ -51,7 +50,7 @@ export function createAtomic<s, t>(
     const thisState = state || initialState;
     const params = cleanParams(action && action.payload ? action.payload : []);
     const funcKey = parseActionKeyFromType(reducerName, action.type);
-    const func = reducerFuncs.find(reducer => generateKey(reducerName, reducer.name) === funcKey);
+    const func = reducerFuncs.find(reducer => reducer.name === funcKey);
     if (!func) {
       return thisState;
     }
@@ -83,7 +82,7 @@ export function createAtomic<s, t>(
   }
 
   function getActionNames(reducerFuncs: GenericActionDescriber<s, t>[]): string[] {
-    return Object.keys(reducerFuncs).map(name => generateKey(reducerName, name));
+    return reducerFuncs.map(reducer => generateKey(reducerName, reducer.name));
   }
 
   function stripUndefined(list: any[]): any[] {
@@ -152,12 +151,12 @@ export function createAtomic<s, t>(
   }
 
   function getFunction<s, t>(
-    func: GenericActionDescriber<s, t>,
+    reducer: GenericActionDescriber<s, t>,
     index: number,
     length: number
   ): GenericActionFunc<s, t> | false {
-    if (typeof func === "object" && typeof func.func === "function") {
-      return func.func;
+    if (typeof reducer === "object" && typeof reducer.func === "function") {
+      return reducer.func;
     } else {
       warning(
         `Redux Atomic: Error in createAtomic for ${reducerName}! Item ${index +
@@ -168,11 +167,11 @@ export function createAtomic<s, t>(
   }
 
   function checkFunctionName<s, t>(
-    func: GenericActionDescriber<s, t>,
+    reducer: GenericActionDescriber<s, t>,
     index: number,
     length: number
   ): string {
-    if (!func.name || func.name.length < 1) {
+    if (!reducer.name || reducer.name.length < 1) {
       throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
         1}/${length}. Please pass the name in the form '{name: 'niceFunction', func: 'niceFunction'}'`;
     } else {
@@ -195,7 +194,4 @@ export const parseActionKeyFromType = (reducerName: string, actionType: string):
 const funcExistsInReducer = <s, t>(
   reducerFuncs: GenericActionDescriber<s, t>[],
   actionName: string
-): boolean => {
-  console.log("funcExists", reducerFuncs, actionName);
-  return reducerFuncs.filter(x => x.name === actionName).length > 0;
-};
+): boolean => reducerFuncs.filter(x => x.name === actionName).length > 0;

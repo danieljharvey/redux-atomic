@@ -35,8 +35,15 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
   };
 };
 
-const atomic1 = createAtomic("atomic1", initialAtomicState, [increment, changeTitle]);
-const atomic2 = createAtomic("atomic2", initialAtomicState, [increment, changeTitle]);
+const atomic1 = createAtomic("atomic1", initialAtomicState, [
+  { name: "increment", func: increment },
+  { name: "changeTitle", func: changeTitle }
+]);
+
+const atomic2 = createAtomic("atomic2", initialAtomicState, [
+  { name: "increment", func: increment },
+  { name: "changeTitle", func: changeTitle }
+]);
 
 const sampleApp = combineReducers<any>({
   atomicOne: atomic1.reducer,
@@ -44,13 +51,13 @@ const sampleApp = combineReducers<any>({
 });
 
 const atomic1Actions = {
-  increment: atomic1.wrap(increment),
-  changeTitle: atomic1.wrap(changeTitle)
+  increment: atomic1.wrap(increment, "increment"),
+  changeTitle: atomic1.wrap(changeTitle, "changeTitle")
 };
 
 const atomic2Actions = {
-  increment: atomic2.wrap(increment),
-  changeTitle: atomic2.wrap(changeTitle)
+  increment: atomic2.wrap(increment, "increment"),
+  changeTitle: atomic2.wrap(changeTitle, "changeTitle")
 };
 
 describe("We're testing this approach", () => {
@@ -77,6 +84,19 @@ describe("We're testing this approach", () => {
 
     const firstState: any = store.getState();
     store.dispatch({ type: "sdfslkdfklslkdflk;sfd" });
+
+    const endState: any = store.getState();
+    expect(firstState).toEqual(endState);
+  });
+
+  it("doesn't break when provided a thunk", () => {
+    let store = createStore(sampleApp);
+
+    const firstState: any = store.getState();
+    const thunk: any = () => {
+      return 0;
+    };
+    store.dispatch(thunk);
 
     const endState: any = store.getState();
     expect(firstState).toEqual(endState);
@@ -123,12 +143,16 @@ const three = (str: string, str2: string, num: number) => (state: StateMate): St
   };
 };
 
-const { wrap, reducer } = createAtomic("test", initialState, [one, two, three]);
+const { wrap, reducer } = createAtomic("test", initialState, [
+  { name: "one", func: one },
+  { name: "two", func: two },
+  { name: "three", func: three }
+]);
 
 const actions = {
-  one: wrap(one),
-  two: wrap(two),
-  three: wrap(three)
+  one: wrap(one, "one"),
+  two: wrap(two, "two"),
+  three: wrap(three, "three")
 };
 
 describe("It creates actions", () => {
@@ -180,35 +204,28 @@ describe("It does not confuse reducers", () => {
 
 describe("It does not create actions for non-existant functions", () => {
   it("Does not allow a 'two' action function to be created", () => {
-    const { wrap, reducer } = createAtomic("boo", initialState, [one]);
-    expect(wrap(two)).toThrowError();
+    const { wrap, reducer } = createAtomic("boo", initialState, [{ name: "one", func: one }]);
+    try {
+      expect(wrap(two, "two")).toThrowError();
+      expect(true).toBeTruthy();
+    } catch {
+      expect.assertions(0);
+    }
   });
 });
 
 describe("It names a function", () => {
   it("Gets a local function name", () => {
     const localFunction: any = () => "horse";
-    const { actionTypes } = createAtomic("boo2", initialState, [localFunction]);
+    const { actionTypes } = createAtomic("boo2", initialState, [
+      { name: "localFunction", func: localFunction }
+    ]);
     expect(actionTypes).toEqual(["boo2_localFunction"]);
-  });
-
-  it("Gets an imported function name", () => {
-    const { actionTypes } = createAtomic("boo3", initialState, [niceFunction as any]);
-    expect(actionTypes).toEqual(["boo3_niceFunction"]);
-  });
-
-  it("Throws an error when sent an anonymous function", () => {
-    try {
-      createAtomic("boo4", initialState, [ohNo as any]);
-      expect(true).toBeTruthy();
-    } catch {
-      expect.assertions(0);
-    }
   });
 
   it("Does not throws an error when sent an anonymous function but is named", () => {
     const { actionTypes, reducer } = createAtomic("boo5", initialState, [
-      niceFunction as any,
+      { name: "niceFunction", func: niceFunction },
       { name: "ohNo", func: ohNo as any }
     ]);
     const boo5Reducer = reducer;
@@ -235,7 +252,7 @@ describe("Names in wrap", () => {
   it("Errors on finding anonymous function", () => {
     const { wrap } = createAtomic("boo7", initialState, [{ name: "ohNo", func: ohNo as any }]);
     try {
-      wrap(ohNo);
+      wrap(ohNo, "ohNo");
       expect(true).toBeTruthy();
     } catch {
       expect.assertions(0);
@@ -249,7 +266,7 @@ describe("Names in wrap", () => {
     expect(true).toBeTruthy();
   });
 
-  it.only("Errors when using a name that has not been used in the reducer", () => {
+  it("Errors when using a name that has not been used in the reducer", () => {
     const { wrap } = createAtomic("boo9", initialState, [{ name: "ohNo", func: ohNo as any }]);
     try {
       wrap(ohNo, "ohNo2");
@@ -263,7 +280,9 @@ describe("Names in wrap", () => {
 describe("It spots multiple reducers with same name", () => {
   it("Throws an error", () => {
     const localFunction: any = () => "horse";
-    const { actionTypes } = createAtomic("wooo", initialState, [localFunction as any]);
+    const { actionTypes } = createAtomic("wooo", initialState, [
+      { name: "localFunction", func: localFunction }
+    ]);
     try {
       expect(createAtomic("wooo", initialState, [niceFunction as any])).toThrowError();
       expect(true).toBeTruthy();

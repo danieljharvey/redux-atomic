@@ -182,16 +182,18 @@ export function createAtomic<s, t>(
     length: number
   ): string {
     if (!reducer.name || reducer.name.length < 1) {
-      throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
-      1}/${length}. Please pass the name in the form '{functionName: function}'`;
+      warning(`Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
+        1}/${length}. Please pass the name in the form '{functionName: function}'`)
+      return ""
     } else {
-      return name;
+      return reducer.name;
     }
   }
 
-  function checkExistingName(reducerName: string) {
+  function checkExistingName(reducerName: string): void {
     if (allNames.includes(reducerName)) {
-      throw `Redux Atomic: Error in createAtomic for ${reducerName}! A reducer with this name already exists!`;
+      warning(`Redux Atomic: Error in createAtomic for ${reducerName}! A reducer with this name already exists!`)
+      return
     }
     allNames.push(reducerName);
   }

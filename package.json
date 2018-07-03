@@ -1,6 +1,6 @@
 {
   "name": "redux-atomic",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "A nice new way to do actions",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,12 +8,13 @@
   "author": "Daniel J Harvey",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^22.2.3",
     "jest": "^22.4.3",
     "redux": "^4.0.0",
     "ts-jest": "^22.4.4",
     "ts-node": "^6.0.2",
     "typescript": "^2.8.3",
-    "@types/jest": "^22.2.3"
+    "@types/node": "^10.5.1"
   },
   "scripts": {
     "test": "jest",

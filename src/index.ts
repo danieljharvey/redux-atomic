@@ -11,38 +11,52 @@ export type f1<s, t, A> = (a: A) => AtomicReducerFunc<s, t>;
 export type f2<s, t, A, B> = (a: A, b: B) => AtomicReducerFunc<s, t>;
 export type f3<s, t, A, B, C> = (a: A, b: B, c: C) => AtomicReducerFunc<s, t>;
 export type f4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicReducerFunc<s, t>;
+export type f5<s, t, A, B, C, D, E> = (a: A, b: B, c: C, d: D, e: E) => AtomicReducerFunc<s, t>;
 
 export type g<s, t> = () => AtomicAction<s, t>;
 export type g1<s, t, A> = (a: A) => AtomicAction<s, t>;
 export type g2<s, t, A, B> = (a: A, b: B) => AtomicAction<s, t>;
 export type g3<s, t, A, B, C> = (a: A, b: B, c: C) => AtomicAction<s, t>;
 export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t>;
+export type g5<s, t, A, B, C, D, E> = (a: A, b: B, c: C, d: D, e: E) => AtomicAction<s, t>;
 
-export type GenericAction<s, t> = GenericActionFunc<s, t> | GenericActionDescriber<s, t>;
 export type GenericActionFunc<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 export type GenericActionDescriber<s, t> = { name: string; func: GenericActionFunc<s, t> };
+
+export type AtomicFunctionList<s, t> = { [key: string]: GenericActionFunc<s, t> }
+
+const warning = (string: string) => {
+  if (typeof process !== "undefined" && process.env.NODE_ENV === 'test') {
+    throw string
+  } else if (typeof console !== "undefined" && typeof console.error === "function" && process.env.NODE_ENV !== 'production') {
+    console.error(string);
+  }
+};
 
 // please forgive this mutable state
 // it records all reducer names to avoid duplicates
 // and the weird errors that result
-let allNames = [];
+let allNames: string[] = [];
 
-export function createAtomic<s, t>(reducerName: string, initialState: s, reducers: GenericAction<s, t>[]) {
+export function createAtomic<s, t>(
+  reducerName: string,
+  initialState: s,
+  reducers: AtomicFunctionList<s, t>
+) {
   const reducerFuncs = saveReducerFuncs(reducers);
-
   checkExistingName(reducerName);
 
   return {
     reducer,
     wrap: wrapper,
-    actionTypes: getActionNames()
+    actionTypes: getActionNames(reducerFuncs)
   };
 
   function reducer(state: s, action: AtomicAction<s, t>): s | t {
     const thisState = state || initialState;
     const params = cleanParams(action && action.payload ? action.payload : []);
     const funcKey = parseActionKeyFromType(reducerName, action.type);
-    const func = funcKey in reducerFuncs ? reducerFuncs[funcKey] : false;
+    const func = reducerFuncs.find(reducer => reducer.name === funcKey);
     if (!func) {
       return thisState;
     }
@@ -50,21 +64,22 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     return atomicFunc ? atomicFunc(thisState) : thisState;
   }
 
-  function isFunctionValid(func: GenericAction<s, t>, params: any[]): AtomicReducerFunc<s, t> | false {
-    return typeof func === "function" ? func.apply(void 0, params) : false;
+  function isFunctionValid(
+    reducer: GenericActionDescriber<s, t>,
+    params: any[]
+  ): AtomicReducerFunc<s, t> | false {
+    return typeof reducer.func === "function" ? reducer.func.apply(void 0, params) : false;
   }
 
   function cleanParams(params: any[] | any): any[] {
     return Array.isArray(params) ? params : [params];
   }
 
-  function wrapStateFunc<s, t>(
-    func: AtomicReducerFunc<s, t>,
-    params: any[],
-    actionName: string
-  ): AtomicAction<s, t> {
+  function wrapStateFunc(params: any[], actionName: string): AtomicAction<s, t> {
     if (!funcExistsInReducer(reducerFuncs, actionName)) {
-      throw `Redux Atomic: Error in wrap for ${reducerName}! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`;
+      warning(
+        `Redux Atomic: Error in wrap() for ${reducerName}! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`
+      );
     }
     return {
       type: generateKey(reducerName, actionName),
@@ -72,8 +87,8 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     };
   }
 
-  function getActionNames() {
-    return Object.keys(reducerFuncs).map(name => generateKey(reducerName, name));
+  function getActionNames(reducerFuncs: GenericActionDescriber<s, t>[]): string[] {
+    return reducerFuncs.map(reducer => generateKey(reducerName, reducer.name));
   }
 
   function stripUndefined(list: any[]): any[] {
@@ -82,65 +97,93 @@ export function createAtomic<s, t>(reducerName: string, initialState: s, reducer
     }, []);
   }
 
-  function wrapper<s, t>(func: f<s, t>, actionName?: string): g<s, t>;
-  function wrapper<s, t, A>(func: f1<s, t, A>, actionName?: string): g1<s, t, A>;
-  function wrapper<s, t, A, B>(func: f2<s, t, A, B>, actionName?: string): g2<s, t, A, B>;
-  function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>, actionName?: string): g3<s, t, A, B, C>;
-  function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>, actionName?: string): g4<s, t, A, B, C, D> {
-    const funcName = getActionName(func, actionName);
-    checkActionNameExists(funcName);
-    return function(a: A, b: B, c: C, d: D) {
-      return wrapStateFunc(func(a, b, c, d), [a, b, c, d], funcName);
-    };
+  function wrapper(func: f<s, t>, actionName: string): g<s, t>;
+  function wrapper<A>(func: f1<s, t, A>, actionName: string): g1<s, t, A>;
+  function wrapper<A, B>(func: f2<s, t, A, B>, actionName: string): g2<s, t, A, B>;
+  function wrapper<A, B, C>(func: f3<s, t, A, B, C>, actionName: string): g3<s, t, A, B, C>;
+  function wrapper<A, B, C, D>(func: f4<s, t, A, B, C, D>, actionName: string): g4<s, t, A, B, C, D>
+  function wrapper<A, B, C, D, E>(func: f5<s, t, A, B, C, D, E>, actionName: string): g5<s, t, A, B, C, D, E> {
+    const funcName = getActionName(actionName);
+    if (funcName && checkActionNameExists(funcName)) {
+      return function (a: A, b: B, c: C, d: D, e: E) {
+        return wrapStateFunc([a, b, c, d, e], funcName);
+      };
+    } else {
+      return function (a: A, b: B, c: C, d: D, e: E) {
+        return {
+          type: funcName || "",
+          payload: [a, b, c, d, e]
+        };
+      };
+    }
   }
 
-  function checkActionNameExists(funcName: string) {
+  function checkActionNameExists(funcName: string): boolean {
     if (!isActionNameFound(funcName)) {
-      throw `Redux Atomic: Error in wrap for ${reducerName}! Could not wrap function ${funcName} as it has not been passed to createAtomic();`;
+      warning(
+        `Redux Atomic: Error in wrap for ${reducerName}! Could not wrap function ${funcName} as it has not been passed to createAtomic();`
+      );
+      return false;
     }
-  }
-  function isActionNameFound(funcName: string) {
-    return Object.keys(reducerFuncs).some((key: string) => key === funcName);
+    return true;
   }
 
-  function getActionName(func: (...any: any[]) => any, actionName?: string) {
-    if (func.name && func.name.length > 0) {
-      return func.name;
-    }
-    if (actionName && actionName.length > 0) {
+  function isActionNameFound(funcName: string) {
+    return reducerFuncs.some(reducer => reducer.name === funcName);
+  }
+
+  function getActionName(actionName: string): string | false {
+    if (actionName && String(actionName) === actionName && actionName.length > 0) {
       return actionName;
     }
-    throw `Redux Atomic: Error in wrap for ${reducerName}! Could not ascertain name of function - if you are using imported const functions please provide an explicit name to wrap, ie wrap(function, 'functionName')`;
+    warning(
+      `Redux Atomic: Error in wrap for ${reducerName}! actionName must be a valid string of 1 character or more`
+    );
+    return false;
   }
 
-  function saveReducerFuncs(reducers: GenericAction<s, t>[]) {
-    return reducers.reduce((acc, reducer, index) => {
-      const funcName = getFunctionName(reducer, index, reducers.length);
-      const reducerFunc = getFunction(reducer, index, reducers.length);
-      return { ...acc, [funcName]: reducerFunc };
-    }, {});
+  function saveReducerFuncs(reducers: AtomicFunctionList<s, t>): GenericActionDescriber<s, t>[] {
+    const reducersArray = Object.keys(reducers)
+    return reducersArray.map(
+      (key: string) => ({ name: key, func: reducers[key] })
+    ).reduce(
+      (acc: GenericActionDescriber<s, t>[], reducer: GenericActionDescriber<s, t>, index: number) => {
+        const reducerFunc = getFunction(reducer, index, reducersArray.length);
+        const funcName = checkFunctionName(reducer, index, reducersArray.length);
+        return reducerFunc && funcName ? [...acc, reducer] : acc;
+      },
+      []
+    );
   }
 
   function generateKey(reducerName: string, actionName: string): string {
     return reducerName + "_" + actionName;
   }
 
-  function getFunction<s, t>(func: GenericAction<s, t>, index: number, length: number) {
-    if (typeof func === "function") {
-      return func;
-    } else if (typeof func === "object" && typeof func.func === "function") {
-      return func.func;
+  function getFunction(
+    reducer: GenericActionDescriber<s, t>,
+    index: number,
+    length: number
+  ): GenericActionFunc<s, t> | false {
+    if (typeof reducer === "object" && typeof reducer.func === "function") {
+      return reducer.func;
     } else {
-      throw `Redux Atomic: Error in createAtomic for ${reducerName}! Item ${index +
-        1}/${length} is not a valid function. Please pass in an array of functions or objects in the form: '{name: 'niceFunction', func: 'niceFunction'}'`;
+      warning(
+        `Redux Atomic: Error in createAtomic for ${reducerName}! Item ${index +
+        1}/${length} is not a valid function. Please pass in functions in the form: '{ functionName: function, functionName2: function2 }'`
+      );
+      return false;
     }
   }
 
-  function getFunctionName<s, t>(func: GenericAction<s, t>, index: number, length: number): string {
-    const name = func.name || "";
-    if (name.length < 1) {
+  function checkFunctionName(
+    reducer: GenericActionDescriber<s, t>,
+    index: number,
+    length: number
+  ): string {
+    if (!reducer.name || reducer.name.length < 1) {
       throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
-        1}/${length}. If it has been imported from another file please try using a 'function' instead of a 'const', or explicitly pass the name in the form '{name: 'niceFunction', func: 'niceFunction'}'`;
+      1}/${length}. Please pass the name in the form '{functionName: function}'`;
     } else {
       return name;
     }
@@ -158,6 +201,7 @@ export const parseActionKeyFromType = (reducerName: string, actionType: string):
   return actionType.includes(reducerName + "_") ? actionType.substr(actionType.lastIndexOf("_") + 1) : "";
 };
 
-const funcExistsInReducer = (reducerFuncs: {}, actionName): boolean => {
-  return Object.keys(reducerFuncs).filter(x => x === actionName).length > 0;
-};
+const funcExistsInReducer = <s, t>(
+  reducerFuncs: GenericActionDescriber<s, t>[],
+  actionName: string
+): boolean => reducerFuncs.filter(x => x.name === actionName).length > 0;

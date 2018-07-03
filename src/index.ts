@@ -170,7 +170,7 @@ export function createAtomic<s, t>(
     } else {
       warning(
         `Redux Atomic: Error in createAtomic for ${reducerName}! Item ${index +
-        1}/${length} is not a valid function. Please pass in an array of objects in the form: '{functionName: function}'`
+        1}/${length} is not a valid function. Please pass in functions in the form: '{ functionName: function, functionName2: function2 }'`
       );
       return false;
     }

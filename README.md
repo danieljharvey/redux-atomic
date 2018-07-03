@@ -260,6 +260,10 @@ As Redux Atomic creates regular Flux actions under the hood, having two reducers
 
 This is to make sure we don't end up with names not matching between passing to createAtomic() and wrap(). If this occurs - check you've sent the function you intend to wrap and any passed names match.
 
+#### `Redux Atomic: Error in createAtomic for niceReducer! Item 2/4 is not a valid function. Please pass in functions in the form: '{functionName:function,functionName2:function2}'`
+
+You have passed something which is not a function to createAtomic().
+
 ### Anything else?
 
 Building your reducers in this way means you can have multiple instances of them that don't interact with one another, so long as they are given different names and each set of actions are exported with the matching `wrap()` function.

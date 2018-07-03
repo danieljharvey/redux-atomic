@@ -185,7 +185,7 @@ export function createAtomic<s, t>(
       throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
       1}/${length}. Please pass the name in the form '{functionName: function}'`;
     } else {
-      return name;
+      return reducer.name;
     }
   }
 

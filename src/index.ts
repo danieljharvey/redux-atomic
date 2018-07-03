@@ -192,7 +192,7 @@ export function createAtomic<s, t>(
 
   function checkExistingName(reducerName: string): void {
     if (allNames.includes(reducerName)) {
-      warning(`Redux Atomic: Error in createAtomic for ${reducerName}! A reducer with this name already exists!`;)
+      warning(`Redux Atomic: Error in createAtomic for ${reducerName}! A reducer with this name already exists!`)
       return
     }
     allNames.push(reducerName);

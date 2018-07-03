@@ -1,7 +1,7 @@
-import { combineReducers } from "redux";
-import { createAtomic } from "../index";
+import { combineReducers, AnyAction } from "redux";
+import { createAtomic, AtomicAction } from "../index";
 
-interface AtomicState {
+export interface AtomicState {
   title: string;
   arrayOfStrings: string[];
   counter: number;
@@ -35,15 +35,9 @@ const changeTitle = (title: string) => (state: AtomicState): AtomicState => {
   };
 };
 
-export const atomic1 = createAtomic("atomic1", initialAtomicState, [
-  { name: "increment", func: increment },
-  { name: "changeTitle", func: changeTitle }
-]);
+export const atomic1 = createAtomic("atomic1", initialAtomicState, { increment, changeTitle });
 
-export const atomic2 = createAtomic("atomic2", initialAtomicState, [
-  { name: "increment", func: increment },
-  { name: "changeTitle", func: changeTitle }
-]);
+export const atomic2 = createAtomic("atomic2", initialAtomicState, { increment, changeTitle });
 
 export const sampleApp = combineReducers<any>({
   atomicOne: atomic1.reducer,

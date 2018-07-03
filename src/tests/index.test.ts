@@ -3,7 +3,7 @@ import { createAtomic, parseActionKeyFromType } from "../index";
 import { niceFunction, ohNo } from "./function";
 
 import { sampleApp, atomic1, atomic1Actions, atomic2Actions } from "./atomicReducerTest";
-import { initialState, stateMateActions, stateMateReducer } from "./stateMateReducerTest";
+import { initialState, stateMateActions, stateMateReducer, stateMateActionTypes } from "./stateMateReducerTest";
 
 describe("We're testing this approach", () => {
   it("Creates the expected actions", () => {
@@ -40,6 +40,9 @@ describe("We're testing this approach", () => {
 });
 
 describe("It creates actions", () => {
+  it("Creates the actions", () => {
+    expect(stateMateActionTypes).toEqual(['test_one', 'test_two', 'test_three'])
+  })
   it("Has created three actions", () => {
     expect(stateMateActions.one).toBeDefined();
     expect(stateMateActions.two).toBeDefined();
@@ -89,17 +92,12 @@ describe("It does not confuse reducers", () => {
 describe("It names a function", () => {
   it("Gets a local function name", () => {
     const localFunction: any = () => "horse";
-    const { actionTypes } = createAtomic("boo2", initialState, [
-      { name: "localFunction", func: localFunction }
-    ]);
+    const { actionTypes } = createAtomic("boo2", initialState, { localFunction });
     expect(actionTypes).toEqual(["boo2_localFunction"]);
   });
 
   it("Does not throws an error when sent an anonymous function but is named", () => {
-    const { actionTypes, reducer } = createAtomic("boo5", initialState, [
-      { name: "niceFunction", func: niceFunction },
-      { name: "ohNo", func: ohNo as any }
-    ]);
+    const { actionTypes, reducer } = createAtomic("boo5", initialState, { niceFunction: niceFunction as any, ohNo });
     const boo5Reducer = reducer;
     const action = {
       type: "boo5_ohNo",
@@ -122,7 +120,7 @@ describe("It names a function", () => {
 
 describe("Names in wrap", () => {
   it("Errors on finding anonymous function", () => {
-    const { wrap } = createAtomic("boo7", initialState, [{ name: "ohNo", func: ohNo as any }]);
+    const { wrap } = createAtomic("boo7", initialState, { ohNo: ohNo as any });
     try {
       wrap(ohNo, "ohNo");
       expect(true).toBeTruthy();
@@ -132,14 +130,14 @@ describe("Names in wrap", () => {
   });
 
   it("Doesn't errors when using named anonymous function", () => {
-    const { wrap } = createAtomic("boo8", initialState, [{ name: "ohNo", func: ohNo as any }]);
+    const { wrap } = createAtomic("boo8", initialState, { ohNo: ohNo as any });
 
     wrap(ohNo, "ohNo");
     expect(true).toBeTruthy();
   });
 
   it("Errors when using a name that has not been used in the reducer", () => {
-    const { wrap } = createAtomic("boo9", initialState, [{ name: "ohNo", func: ohNo as any }]);
+    const { wrap } = createAtomic("boo9", initialState, { ohNo: ohNo as any });
     try {
       wrap(ohNo, "ohNo2");
       expect(true).toBeTruthy();
@@ -152,11 +150,10 @@ describe("Names in wrap", () => {
 describe("It spots multiple reducers with same name", () => {
   it("Throws an error", () => {
     const localFunction: any = () => "horse";
-    const { actionTypes } = createAtomic("wooo", initialState, [
-      { name: "localFunction", func: localFunction }
-    ]);
+    const { actionTypes } = createAtomic("wooo", initialState, { niceFunction: niceFunction as any }
+    );
     try {
-      expect(createAtomic("wooo", initialState, [niceFunction as any])).toThrowError();
+      expect(createAtomic("wooo", initialState, { niceFunction: niceFunction as any })).toThrowError();
       expect(true).toBeTruthy();
     } catch {
       expect.assertions(0);

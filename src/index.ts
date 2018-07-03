@@ -23,6 +23,8 @@ export type g5<s, t, A, B, C, D, E> = (a: A, b: B, c: C, d: D, e: E) => AtomicAc
 export type GenericActionFunc<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 export type GenericActionDescriber<s, t> = { name: string; func: GenericActionFunc<s, t> };
 
+export type AtomicFunctionList<s, t> = { [key: string]: GenericActionFunc<s, t> }
+
 const warning = (string: string) => {
   if (typeof process !== "undefined" && process.env.NODE_ENV === 'test') {
     throw string
@@ -39,7 +41,7 @@ let allNames: string[] = [];
 export function createAtomic<s, t>(
   reducerName: string,
   initialState: s,
-  reducers: GenericActionDescriber<s, t>[]
+  reducers: AtomicFunctionList<s, t>
 ) {
   const reducerFuncs = saveReducerFuncs(reducers);
   checkExistingName(reducerName);
@@ -76,7 +78,7 @@ export function createAtomic<s, t>(
   function wrapStateFunc(params: any[], actionName: string): AtomicAction<s, t> {
     if (!funcExistsInReducer(reducerFuncs, actionName)) {
       warning(
-        `Redux Atomic: Error in wrap for ${reducerName}! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`
+        `Redux Atomic: Error in wrap() for ${reducerName}! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`
       );
     }
     return {
@@ -140,11 +142,14 @@ export function createAtomic<s, t>(
     return false;
   }
 
-  function saveReducerFuncs(reducers: GenericActionDescriber<s, t>[]): GenericActionDescriber<s, t>[] {
-    return reducers.reduce(
+  function saveReducerFuncs(reducers: AtomicFunctionList<s, t>): GenericActionDescriber<s, t>[] {
+    const reducersArray = Object.keys(reducers)
+    return reducersArray.map(
+      (key: string) => ({ name: key, func: reducers[key] })
+    ).reduce(
       (acc: GenericActionDescriber<s, t>[], reducer: GenericActionDescriber<s, t>, index: number) => {
-        const reducerFunc = getFunction(reducer, index, reducers.length);
-        const funcName = checkFunctionName(reducer, index, reducers.length);
+        const reducerFunc = getFunction(reducer, index, reducersArray.length);
+        const funcName = checkFunctionName(reducer, index, reducersArray.length);
         return reducerFunc && funcName ? [...acc, reducer] : acc;
       },
       []
@@ -165,7 +170,7 @@ export function createAtomic<s, t>(
     } else {
       warning(
         `Redux Atomic: Error in createAtomic for ${reducerName}! Item ${index +
-        1}/${length} is not a valid function. Please pass in an array of objects in the form: '{name: 'niceFunction', func: 'niceFunction'}'`
+        1}/${length} is not a valid function. Please pass in an array of objects in the form: '{functionName: function}'`
       );
       return false;
     }
@@ -178,7 +183,7 @@ export function createAtomic<s, t>(
   ): string {
     if (!reducer.name || reducer.name.length < 1) {
       throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
-      1}/${length}. Please pass the name in the form '{name: 'niceFunction', func: 'niceFunction'}'`;
+      1}/${length}. Please pass the name in the form '{functionName: function}'`;
     } else {
       return name;
     }

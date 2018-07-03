@@ -29,7 +29,7 @@ const inc = (howMuch: number) => (state: number): number => state + howMuch
 
 const dec = (howMuch: number) => (state: number): number => state - howMuch
 
-const { reducer, wrap } = createReducer("niceReducer", initialState, [inc, dec])
+const { reducer, wrap } = createReducer("niceReducer", initialState, {inc, dec})
 
 export numberReducer = reducer
 
@@ -230,7 +230,7 @@ This would then be picked up by the `newTitle` function passed into the reducer.
 `actionTypes` - an array of strings with the type of each action that your reducer responds to - mostly provided for debugging purposes, ie
 
 ```typescript
-const { actionTypes } = createAtomic("hello", state, [great, job, nice, functions]);
+const { actionTypes } = createAtomic("hello", state, {great, job, nice, functions});
 // actionTypes == ['hello_great', 'hello_job', 'hello_nice', 'hello_functions']
 ```
 
@@ -251,33 +251,6 @@ A dispatchable action for your function, which expects the same parameters as yo
 #### `Redux Atomic: Error in wrap for niceReducer! niceFunction cannot be found. Did you remember to pass it to 'createAtomic()'?`
 
 You have tried to wrap a function that has not been passed to the reducer. Make sure your function is passed to the 'reducers' array in createAtomic()
-
-#### `Redux Atomic: Error in createAtomic for niceReducer! Item 2/4 is not a valid function. Please pass in an array of functions or objects in the form: '{name: 'niceFunction', func: 'niceFunction'}'`
-
-You have passed something which is not a function to createAtomic().
-
-#### `Redux Atomic: Error in createAtomic for niceReducer! Could not ascertain name of function 2/4. If it has been imported from another file please try using a 'function' instead of a 'const', or explicitly pass the name in the form '{name: 'niceFunction', func: 'niceFunction'}'`;
-
-Similar to above. Valid data shapes are
-
-```typescript
-const reducerFunctions = [myNiceFunction, otherFunction, greatJob];
-const { reducer } = createAtomic("yeah", initialState, reducerFunctions);
-```
-
-or
-
-```typescript
-const objectShapedReducerFunctions = [
-  { name: "myNiceFunction", func: myNiceFunction },
-  { name: "otherFunction", func: otherFunction },
-  { name: "greatJob", func: greatJob }
-];
-
-const { reducer } = createAtomic("yeah2", initialState, objectShapedReducerFunctions);
-```
-
-The array shape will work for types of `Function` or anonymous lambda functions declared in the same file. If you have imported anonymous functions from another file, JS loses the name in transit and thus it must be specified.
 
 #### `Redux Atomic: Error in createAtomic for niceReducer! A reducer with this name already exists!`
 

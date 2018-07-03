@@ -1,4 +1,4 @@
-import { createAtomic } from "../index";
+import { createAtomic, AtomicAction } from "../index";
 
 export interface StateMate {
   number: number;
@@ -45,13 +45,11 @@ interface StateAction {
   payload: any[]
 }
 
-const { wrap, reducer } = createAtomic<StateMate, StateMate>("test", initialState, [
-  { name: "one", func: one },
-  { name: "two", func: two },
-  { name: "three", func: three }
-]);
+const { actionTypes, wrap, reducer } = createAtomic<StateMate, StateMate>("test", initialState, { one, two, three });
 
 export const stateMateReducer = reducer;
+
+export const stateMateActionTypes = actionTypes
 
 export const stateMateActions = {
   one: wrap(one, "one"),

@@ -1,4 +1,4 @@
-import { createAtomic, AtomicAction } from "../index";
+import { createAtomic } from "../index";
 
 export interface StateMate {
   number: number;
@@ -40,7 +40,12 @@ const three = (str: string, str2: string, num: number) => (state: StateMate): St
   };
 };
 
-const { wrap, reducer } = createAtomic("test", initialState, [
+interface StateAction {
+  type: string
+  payload: any[]
+}
+
+const { wrap, reducer } = createAtomic<StateMate, StateMate>("test", initialState, [
   { name: "one", func: one },
   { name: "two", func: two },
   { name: "three", func: three }

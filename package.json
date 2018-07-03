@@ -8,12 +8,12 @@
   "author": "Daniel J Harvey",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^22.2.3",
     "jest": "^22.4.3",
     "redux": "^4.0.0",
     "ts-jest": "^22.4.4",
     "ts-node": "^6.0.2",
-    "typescript": "^2.8.3",
-    "@types/jest": "^22.2.3"
+    "typescript": "^2.8.3"
   },
   "scripts": {
     "test": "jest",
@@ -36,5 +36,8 @@
       "json",
       "node"
     ]
+  },
+  "dependencies": {
+    "@types/node": "^10.5.1"
   }
 }

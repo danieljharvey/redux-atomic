@@ -11,18 +11,22 @@ export type f1<s, t, A> = (a: A) => AtomicReducerFunc<s, t>;
 export type f2<s, t, A, B> = (a: A, b: B) => AtomicReducerFunc<s, t>;
 export type f3<s, t, A, B, C> = (a: A, b: B, c: C) => AtomicReducerFunc<s, t>;
 export type f4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicReducerFunc<s, t>;
+export type f5<s, t, A, B, C, D, E> = (a: A, b: B, c: C, d: D, e: E) => AtomicReducerFunc<s, t>;
 
 export type g<s, t> = () => AtomicAction<s, t>;
 export type g1<s, t, A> = (a: A) => AtomicAction<s, t>;
 export type g2<s, t, A, B> = (a: A, b: B) => AtomicAction<s, t>;
 export type g3<s, t, A, B, C> = (a: A, b: B, c: C) => AtomicAction<s, t>;
 export type g4<s, t, A, B, C, D> = (a: A, b: B, c: C, d: D) => AtomicAction<s, t>;
+export type g5<s, t, A, B, C, D, E> = (a: A, b: B, c: C, d: D, e: E) => AtomicAction<s, t>;
 
 export type GenericActionFunc<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 export type GenericActionDescriber<s, t> = { name: string; func: GenericActionFunc<s, t> };
 
 const warning = (string: string) => {
-  if (typeof console !== "undefined" && typeof console.error === "function") {
+  if (typeof process !== "undefined" && process.env.NODE_ENV === 'test') {
+    throw string
+  } else if (typeof console !== "undefined" && typeof console.error === "function" && process.env.NODE_ENV !== 'production') {
     console.error(string);
   }
 };
@@ -69,7 +73,7 @@ export function createAtomic<s, t>(
     return Array.isArray(params) ? params : [params];
   }
 
-  function wrapStateFunc<s, t>(params: any[], actionName: string): AtomicAction<s, t> {
+  function wrapStateFunc(params: any[], actionName: string): AtomicAction<s, t> {
     if (!funcExistsInReducer(reducerFuncs, actionName)) {
       warning(
         `Redux Atomic: Error in wrap for ${reducerName}! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`
@@ -91,21 +95,22 @@ export function createAtomic<s, t>(
     }, []);
   }
 
-  function wrapper<s, t>(func: f<s, t>, actionName: string): g<s, t>;
-  function wrapper<s, t, A>(func: f1<s, t, A>, actionName: string): g1<s, t, A>;
-  function wrapper<s, t, A, B>(func: f2<s, t, A, B>, actionName: string): g2<s, t, A, B>;
-  function wrapper<s, t, A, B, C>(func: f3<s, t, A, B, C>, actionName: string): g3<s, t, A, B, C>;
-  function wrapper<s, t, A, B, C, D>(func: f4<s, t, A, B, C, D>, actionName: string): g4<s, t, A, B, C, D> {
+  function wrapper(func: f<s, t>, actionName: string): g<s, t>;
+  function wrapper<A>(func: f1<s, t, A>, actionName: string): g1<s, t, A>;
+  function wrapper<A, B>(func: f2<s, t, A, B>, actionName: string): g2<s, t, A, B>;
+  function wrapper<A, B, C>(func: f3<s, t, A, B, C>, actionName: string): g3<s, t, A, B, C>;
+  function wrapper<A, B, C, D>(func: f4<s, t, A, B, C, D>, actionName: string): g4<s, t, A, B, C, D>
+  function wrapper<A, B, C, D, E>(func: f5<s, t, A, B, C, D, E>, actionName: string): g5<s, t, A, B, C, D, E> {
     const funcName = getActionName(actionName);
     if (funcName && checkActionNameExists(funcName)) {
-      return function(a: A, b: B, c: C, d: D) {
-        return wrapStateFunc([a, b, c, d], funcName);
+      return function (a: A, b: B, c: C, d: D, e: E) {
+        return wrapStateFunc([a, b, c, d, e], funcName);
       };
     } else {
-      return function(a: A, b: B, c: C, d: D) {
+      return function (a: A, b: B, c: C, d: D, e: E) {
         return {
           type: funcName || "",
-          payload: [a, b, c, d]
+          payload: [a, b, c, d, e]
         };
       };
     }
@@ -150,7 +155,7 @@ export function createAtomic<s, t>(
     return reducerName + "_" + actionName;
   }
 
-  function getFunction<s, t>(
+  function getFunction(
     reducer: GenericActionDescriber<s, t>,
     index: number,
     length: number
@@ -160,20 +165,20 @@ export function createAtomic<s, t>(
     } else {
       warning(
         `Redux Atomic: Error in createAtomic for ${reducerName}! Item ${index +
-          1}/${length} is not a valid function. Please pass in an array of objects in the form: '{name: 'niceFunction', func: 'niceFunction'}'`
+        1}/${length} is not a valid function. Please pass in an array of objects in the form: '{name: 'niceFunction', func: 'niceFunction'}'`
       );
       return false;
     }
   }
 
-  function checkFunctionName<s, t>(
+  function checkFunctionName(
     reducer: GenericActionDescriber<s, t>,
     index: number,
     length: number
   ): string {
     if (!reducer.name || reducer.name.length < 1) {
       throw `Redux Atomic: Error in createAtomic for ${reducerName}! Could not ascertain name of function ${index +
-        1}/${length}. Please pass the name in the form '{name: 'niceFunction', func: 'niceFunction'}'`;
+      1}/${length}. Please pass the name in the form '{name: 'niceFunction', func: 'niceFunction'}'`;
     } else {
       return name;
     }

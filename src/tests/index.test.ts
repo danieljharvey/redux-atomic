@@ -1,5 +1,5 @@
 import { createStore } from "redux";
-import { createAtomic, parseActionKeyFromType } from "../index";
+import { createAtomic, parseActionKeyFromType, AtomicListener, StandardAction } from "../index";
 import { niceFunction, ohNo } from "./function";
 
 import {
@@ -115,8 +115,8 @@ describe("It does not confuse reducers", () => {
 
 describe("It does not create actions for non-existant functions", () => {
   it("Does not allow a 'two' action function to be created", () => {
-    const { wrap, reducer } = createAtomic("boo", initialState, { one });
-    expect(wrap(two, "two")).toThrowError();
+    const { wrap, reducer } = createAtomic("boo_poo", initialState, { one });
+      expect(() => wrap(two, "two")).toThrowError();
   });
 });
 
@@ -138,9 +138,9 @@ describe("It allows use of listener functions", () => {
     });
 
     const { wrap, reducer } = createAtomic<StateMate, StateMate>(
-      "boo",
+      "booListener",
       initialState,
-      [one],
+      {one},  
       [{ type: TEST_ACTION_TYPE, func: testListener }]
     );
     const reply = reducer(initialState, testAction);
@@ -151,12 +151,12 @@ describe("It allows use of listener functions", () => {
     const listener = (state: StateMate): StateMate => state;
     const SOME_SORT_OF_TYPE = "some_sort_of_type";
     const { actionTypes } = createAtomic(
-      "boo",
+      "booListener2",
       initialState,
-      [niceFunction as any],
+        {niceFunction: niceFunction as any},
       [{ type: SOME_SORT_OF_TYPE, func: listener }]
     );
-    expect(actionTypes).toEqual(["boo_niceFunction", SOME_SORT_OF_TYPE]);
+    expect(actionTypes).toEqual(["booListener2_niceFunction", SOME_SORT_OF_TYPE]);
   });
 });
 
@@ -185,26 +185,11 @@ describe("It names a function", () => {
   });
 
   it("Throws an error when total nonsense is sent instead of a function", () => {
-    try {
-      createAtomic("boo6", initialState, ["nonsense"] as any);
-      expect(true).toBeTruthy();
-    } catch {
-      expect.assertions(0);
-    }
+    expect(() => createAtomic("boo6", initialState, ["nonsense"] as any)).toThrow()
   });
 });
 
 describe("Names in wrap", () => {
-  it("Errors on finding anonymous function", () => {
-    const { wrap } = createAtomic("boo7", initialState, { ohNo: ohNo as any });
-    try {
-      wrap(ohNo, "ohNo");
-      expect(true).toBeTruthy();
-    } catch {
-      expect.assertions(0);
-    }
-  });
-
   it("Doesn't errors when using named anonymous function", () => {
     const { wrap } = createAtomic("boo8", initialState, { ohNo: ohNo as any });
 
@@ -214,12 +199,7 @@ describe("Names in wrap", () => {
 
   it("Errors when using a name that has not been used in the reducer", () => {
     const { wrap } = createAtomic("boo9", initialState, { ohNo: ohNo as any });
-    try {
-      wrap(ohNo, "ohNo2");
-      expect(true).toBeTruthy();
-    } catch {
-      expect.assertions(0);
-    }
+    expect(() => wrap(ohNo, "ohNo2")).toThrow()
   });
 });
 
@@ -229,15 +209,10 @@ describe("It spots multiple reducers with same name", () => {
     const { actionTypes } = createAtomic("wooo", initialState, {
       niceFunction: niceFunction as any
     });
-    try {
-      expect(
+      expect(() => 
         createAtomic("wooo", initialState, {
           niceFunction: niceFunction as any
         })
       ).toThrowError();
-      expect(true).toBeTruthy();
-    } catch {
-      expect.assertions(0);
-    }
   });
 });

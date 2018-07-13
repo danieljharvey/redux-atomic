@@ -189,7 +189,7 @@ This would then be picked up by the `newTitle` function passed into the reducer.
 
 `initialState` is the starting data state of your reducer.
 
-`reducers` is how you provide your functionality to Redux Atomic. Pass them in as an array of reducer functions, or an array of objects in this format: `{name: 'niceFunction', func: niceFunction}`.
+`reducers` is how you provide your functionality to Redux Atomic. Pass them in as an array of reducer functions, or an array of objects in this format: `{actionName: actionFunction}` or indeed just `{actionFunction, anotherActionFunction, yetAnother}` etc.
 
 `listeners` is how you respond to actions from outside this reducer, and are passed in the form `{[ACTION_NAME_TO_LISTEN_TO]: niceFunction}`, where `niceFunction` is a function of type `(state, action) => state`
 

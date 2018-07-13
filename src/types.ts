@@ -31,3 +31,4 @@ export type GenericActionFunc<s, t> = (...a: any[]) => AtomicReducerFunc<s, t>;
 export type GenericActionDescriber<s, t> = { name: string; func: GenericActionFunc<s, t> };
 
 export type AtomicFunctionList<s, t> = { [key: string]: GenericActionFunc<s, t> };
+export type AtomicListenerList<s, t> = { [key: string]: AtomicListener<s, t> };

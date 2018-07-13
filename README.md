@@ -10,6 +10,10 @@ Here is a library for helping you type less by replacing separate actions/reduce
 
 Nah, nothing magic is going on, making your reducer this way means we can autocreate typed action creators, thus saving you typing out loads of code that adds little value.
 
+### Why?
+
+Actions in languages like Elm and Purescript are generally described by a type such as `DoThing` that may take a parameter or two like `ChangeName('Bruce')` or `SetCursorPosition(1, 3)` - this libraries aims to provide that simplicity.
+
 ### How?
 
 Check out the [example app](https://github.com/danieljharvey/redux-atomic-example)!
@@ -130,11 +134,11 @@ export actions = {
 }
 ```
 
-The names are a bit ridiculous, granted, and typings do make stuff more verbose, but that's still at lot of stuff. With a few more actions you'd be irresponsible not to move the action creators and reducer into separate folders, and then all the constants need exporting/importing etc etc.
+The names are a bit ridiculous, granted, and typings do make stuff more verbose, but that's still at lot of stuff. With a few more actions you'd be irresponsible not to move the action creators and reducer into separate folders, and then all the constants need exporting/importing etc etc. All in all in that's a lot of code that's not describing much of anything.
 
 ### Surely working in this way ties each action to each reducer?
 
-Yes true. It's not to say that having one action that affects multiple reducers is not useful, but is quite rare - Redux Atomic's aim is to make the 90% case of 1-1 action-reducer relationships easier to do.
+Yes true. The main actions Redux Atomic creates are designed to make the 90%-of-the-time case of 1-1 action-reducer relationships easier to do. To allow your reducer to pick up global actions, see the `listeners` parameter for `createAtomic()` below.
 
 ### Can I still view these actions in Redux Dev Tools etc?
 
@@ -177,7 +181,7 @@ This would then be picked up by the `newTitle` function passed into the reducer.
 
 ### API reference
 
-#### `createAtomic(reducerName, initialState, reducers)`
+#### `createAtomic(reducerName, initialState, reducers, listeners = {})`
 
 ##### Parameters:
 
@@ -186,6 +190,8 @@ This would then be picked up by the `newTitle` function passed into the reducer.
 `initialState` is the starting data state of your reducer.
 
 `reducers` is how you provide your functionality to Redux Atomic. Pass them in as an array of reducer functions, or an array of objects in this format: `{name: 'niceFunction', func: niceFunction}`.
+
+`listeners` is how you respond to actions from outside this reducer, and are passed in the form `{[ACTION_NAME_TO_LISTEN_TO]: niceFunction}`, where `niceFunction` is a function of type `(state, action) => state`
 
 ##### Returns:
 
@@ -196,7 +202,7 @@ This would then be picked up by the `newTitle` function passed into the reducer.
 `actionTypes` - an array of strings with the type of each action that your reducer responds to - mostly provided for debugging purposes, ie
 
 ```typescript
-const { actionTypes } = createAtomic("hello", state, {great, job, nice, functions});
+const { actionTypes } = createAtomic("hello", state, { great, job, nice, functions });
 // actionTypes == ['hello_great', 'hello_job', 'hello_nice', 'hello_functions']
 ```
 

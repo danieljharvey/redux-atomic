@@ -34,7 +34,8 @@ import {
   checkActionNameExists,
   getActionName,
   isFunctionValid,
-  getActionNames
+  getActionNames,
+  checkExistingName
 } from "./helpers";
 
 // please forgive this mutable state
@@ -50,7 +51,7 @@ export function createAtomic<s, t>(
 ) {
   const reducerFuncs = saveReducerFuncs<s, t>(reducerName, reducers);
   const listenerFuncs = saveListenerFuncs<s, t>(listeners);
-  checkExistingName(reducerName);
+  allNames = checkExistingName(allNames, reducerName);
 
   return {
     reducer,
@@ -110,16 +111,6 @@ export function createAtomic<s, t>(
         };
       };
     }
-  }
-
-  function checkExistingName(reducerName: string): void {
-    if (allNames.includes(reducerName)) {
-      warning(
-        `Redux Atomic: Error in createAtomic for ${reducerName}! A reducer with this name already exists!`
-      );
-      return;
-    }
-    allNames.push(reducerName);
   }
 }
 

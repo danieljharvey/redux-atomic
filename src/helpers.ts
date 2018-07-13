@@ -137,3 +137,13 @@ export const getActionNames = <s, t>(
   const listenerTypes = Object.values(listenerFuncs).map(listener => listener.type);
   return reducerTypes.concat(listenerTypes);
 };
+
+export const checkExistingName = (allNames: string[], reducerName: string): string[] => {
+  if (allNames.includes(reducerName)) {
+    warning(
+      `Redux Atomic: Error in createAtomic for ${reducerName}! A reducer with this name already exists!`
+    );
+    return allNames;
+  }
+  return allNames.concat(reducerName);
+};

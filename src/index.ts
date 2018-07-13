@@ -85,10 +85,9 @@ export function createAtomic<s, t>(
   }
 
   function runListeners(state: s, action: StandardAction): s | t {
-    const listenerFunc = listenerFuncs.filter((listener: AtomicListenerObj<s, t>) => {
-      const { type } = listener;
-      return action.type === type;
-    })[0];
+    const listenerFunc = listenerFuncs.filter(
+      (listener: AtomicListenerObj<s, t>) => action.type === listener.type
+    )[0];
     return listenerFunc !== undefined ? listenerFunc.func(state, action) : state;
   }
 

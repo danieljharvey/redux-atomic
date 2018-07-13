@@ -20,7 +20,14 @@ import {
   AtomicFunctionList
 } from "./types";
 export { AtomicReducer, AtomicListener } from "./types";
-import { parseActionKeyFromType, funcExistsInReducer, warning, generateKey } from "./helpers";
+import {
+  parseActionKeyFromType,
+  funcExistsInReducer,
+  warning,
+  generateKey,
+  cleanParams,
+  stripUndefined
+} from "./helpers";
 
 // please forgive this mutable state
 // it records all reducer names to avoid duplicates
@@ -63,10 +70,6 @@ export function createAtomic<s, t>(
     return typeof reducer.func === "function" ? reducer.func.apply(void 0, params) : false;
   }
 
-  function cleanParams(params: any[] | any): any[] {
-    return Array.isArray(params) ? params : [params];
-  }
-
   function wrapStateFunc(params: any[], actionName: string): AtomicAction<s, t> {
     if (!funcExistsInReducer(reducerFuncs, actionName)) {
       warning(
@@ -94,12 +97,6 @@ export function createAtomic<s, t>(
     const reducerTypes = reducerFuncs.map(reducer => generateKey(reducerName, reducer.name));
     const listenerTypes = Object.values(listenerFuncs).map(listener => listener.type);
     return reducerTypes.concat(listenerTypes);
-  }
-
-  function stripUndefined(list: any[]): any[] {
-    return list.reduce((acc, val) => {
-      return val !== undefined ? [...acc, val] : [...acc];
-    }, []);
   }
 
   function wrapper(_: f<s, t>, actionName: string): g<s, t>;

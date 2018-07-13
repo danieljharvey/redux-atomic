@@ -23,3 +23,10 @@ export const warning = (string: string) => {
 
 export const generateKey = (reducerName: string, actionName: string): string =>
   reducerName + "_" + actionName;
+
+export const cleanParams = (params: any[] | any): any[] => (Array.isArray(params) ? params : [params]);
+
+export const stripUndefined = (list: any[]): any[] =>
+  list.reduce((acc, val) => {
+    return val !== undefined ? [...acc, val] : [...acc];
+  }, []);

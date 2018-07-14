@@ -4,18 +4,6 @@ import {
   AtomicListener,
   AtomicListenerObj,
   AtomicAction,
-  f,
-  f1,
-  f2,
-  f3,
-  f4,
-  f5,
-  g,
-  g1,
-  g2,
-  g3,
-  g4,
-  g5,
   GenericActionFunc,
   GenericActionDescriber,
   AtomicFunctionList,
@@ -91,24 +79,18 @@ export function createAtomic<s, t>(
     return listenerFunc !== undefined ? listenerFunc.func(state, action) : state;
   }
 
-  function wrapper(_: f<s, t>, actionName: string): g<s, t>;
-  function wrapper<A>(_: f1<s, t, A>, actionName: string): g1<s, t, A>;
-  function wrapper<A, B>(_: f2<s, t, A, B>, actionName: string): g2<s, t, A, B>;
-  function wrapper<A, B, C>(_: f3<s, t, A, B, C>, actionName: string): g3<s, t, A, B, C>;
-  function wrapper<A, B, C, D>(_: f4<s, t, A, B, C, D>, actionName: string): g4<s, t, A, B, C, D>;
-  function wrapper<A, B, C, D, E>(_: f5<s, t, A, B, C, D, E>, actionName: string): g5<s, t, A, B, C, D, E> {
+  function wrapper<TS extends any[]>(
+    fn: (...args: TS) => AtomicReducerFunc<s, t>,
+    actionName: string
+  ): (...args: TS) => AtomicAction<s, t> {
     const funcName = getActionName(reducerName, actionName);
     if (funcName && checkActionNameExists<s, t>(reducerName, reducerFuncs, funcName)) {
-      return function(a: A, b: B, c: C, d: D, e: E) {
-        return wrapStateFunc([a, b, c, d, e], funcName);
-      };
+      return (...args: TS) => wrapStateFunc(args, funcName);
     } else {
-      return function(a: A, b: B, c: C, d: D, e: E) {
-        return {
-          type: funcName || "",
-          payload: [a, b, c, d, e]
-        };
-      };
+      return (...args: TS) => ({
+        type: funcName || "",
+        payload: args
+      });
     }
   }
 }
@@ -118,18 +100,6 @@ export {
   AtomicReducerFunc,
   AtomicListenerObj,
   AtomicAction,
-  f,
-  f1,
-  f2,
-  f3,
-  f4,
-  f5,
-  g,
-  g1,
-  g2,
-  g3,
-  g4,
-  g5,
   GenericActionFunc,
   GenericActionDescriber,
   AtomicFunctionList,

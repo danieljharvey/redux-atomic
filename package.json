@@ -13,7 +13,7 @@
     "redux": "^4.0.0",
     "ts-jest": "^22.4.4",
     "ts-node": "^6.0.2",
-    "typescript": "^2.8.3",
+    "typescript": "rc",
     "@types/node": "^10.5.1"
   },
   "scripts": {

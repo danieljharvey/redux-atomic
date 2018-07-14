@@ -44,7 +44,8 @@ export function createAtomic<s, t>(
   return {
     reducer,
     wrap: wrapper,
-    actionTypes: getActionNames<s, t>(reducerName, reducerFuncs, listenerFuncs)
+    actionTypes: getActionNames<s, t>(reducerName, reducerFuncs, listenerFuncs),
+    actions: wrapActions(reducers)
   };
 
   function reducer(state: s, action: AtomicAction<s, t> | StandardAction): s | t {
@@ -77,6 +78,15 @@ export function createAtomic<s, t>(
       (listener: AtomicListenerObj<s, t>) => action.type === listener.type
     )[0];
     return listenerFunc !== undefined ? listenerFunc.func(state, action) : state;
+  }
+
+  function wrapActions<TS extends any[]>(reducers: AtomicFunctionList<s, t>) {
+    let actionList: { [key: string]: (...args: TS) => AtomicAction<s, t> } = {};
+    Object.keys(reducers).forEach(key => {
+      const wrapped: (...args: TS) => AtomicAction<s, t> = wrapper(reducers[key], key);
+      actionList[key] = wrapped;
+    });
+    return actionList;
   }
 
   function wrapper<TS extends any[]>(

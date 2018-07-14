@@ -200,3 +200,12 @@ describe("It spots multiple reducers with same name", () => {
     ).toThrowError();
   });
 });
+
+describe("Automatically wrap actions", () => {
+  it("Creates a list of action with names that match the input", () => {
+    const { actions } = createAtomic("boo10", initialState, { ohNo: ohNo as any, wooHoo: ohNo as any });
+
+    expect(typeof actions.ohNo).toBe("function");
+    expect(typeof actions.wooHoo).toBe("function");
+  });
+});

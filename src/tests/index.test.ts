@@ -5,7 +5,7 @@ import {
   AtomicListener,
   StandardAction
 } from "../index";
-import { niceFunction, ohNo, takesAStringAndNumber } from "./function";
+import { niceFunction, ohNo } from "./function";
 
 import {
   sampleApp,
@@ -224,25 +224,5 @@ describe("It spots multiple reducers with same name", () => {
         niceFunction: niceFunction as any
       })
     ).toThrowError();
-  });
-});
-
-describe("Automatically wrap actions", () => {
-  it("Creates a list of action with names that match the input", () => {
-    const { actions } = createAtomic("boo10", initialState, {
-      ohNo: ohNo as any,
-      wooHoo: ohNo as any
-    });
-
-    expect(typeof actions.ohNo).toBe("function");
-    expect(typeof actions.wooHoo).toBe("function");
-  });
-
-  it("Creates a list of action with types that match the input", () => {
-    const { actions } = createAtomic("boo11", initialState, {
-      takesAStringAndNumber: takesAStringAndNumber
-    });
-
-    expect(typeof actions.takesAStringAndNumber).toBe("function");
   });
 });

@@ -1,15 +1,14 @@
 import {
   StandardAction,
   AtomicReducerFunc,
-  AtomicListener,
   AtomicListenerObj,
   AtomicAction,
   GenericActionFunc,
   GenericActionDescriber,
   AtomicFunctionList,
-  AtomicListenerList
+  AtomicListenerList,
+  AtomicListener
 } from "./types";
-export { AtomicReducer, AtomicListener } from "./types";
 import {
   parseActionKeyFromType,
   funcExistsInReducer,
@@ -25,8 +24,6 @@ import {
   getActionNames,
   checkExistingName
 } from "./helpers";
-
-import { mapObjIndexed } from "ramda";
 
 // please forgive this mutable state
 // it records all reducer names to avoid duplicates
@@ -46,8 +43,7 @@ export function createAtomic<s, t>(
   return {
     reducer,
     wrap: wrapper,
-    actionTypes: getActionNames<s, t>(reducerName, reducerFuncs, listenerFuncs),
-    actions: wrapActions(reducers)
+    actionTypes: getActionNames<s, t>(reducerName, reducerFuncs, listenerFuncs)
   };
 
   function reducer(
@@ -90,12 +86,6 @@ export function createAtomic<s, t>(
       : state;
   }
 
-  function wrapActions(reducers: AtomicFunctionList<s, t>) {
-    return mapObjIndexed((_, key) => {
-      return wrapper(reducers[key], key);
-    }, reducers);
-  }
-
   function wrapper<TS extends any[]>(
     fn: (...args: TS) => AtomicReducerFunc<s, t>,
     actionName: string
@@ -118,6 +108,7 @@ export function createAtomic<s, t>(
 export {
   StandardAction,
   AtomicReducerFunc,
+  AtomicListener,
   AtomicListenerObj,
   AtomicAction,
   GenericActionFunc,

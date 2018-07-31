@@ -37,9 +37,5 @@
       "json",
       "node"
     ]
-  },
-  "dependencies": {
-    "@types/ramda": "^0.25.35",
-    "ramda": "^0.25.0"
   }
 }

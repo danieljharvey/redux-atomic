@@ -9,12 +9,12 @@
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^22.2.3",
+    "@types/node": "^10.5.1",
     "jest": "^22.4.3",
     "redux": "^4.0.0",
     "ts-jest": "^22.4.4",
     "ts-node": "^6.0.2",
-    "typescript": "rc",
-    "@types/node": "^10.5.1"
+    "typescript": "^3.0.0"
   },
   "scripts": {
     "test": "jest",
@@ -37,5 +37,9 @@
       "json",
       "node"
     ]
+  },
+  "dependencies": {
+    "@types/ramda": "^0.25.35",
+    "ramda": "^0.25.0"
   }
 }

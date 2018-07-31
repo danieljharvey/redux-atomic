@@ -26,6 +26,8 @@ import {
   checkExistingName
 } from "./helpers";
 
+import { mapObjIndexed } from "ramda";
+
 // please forgive this mutable state
 // it records all reducer names to avoid duplicates
 // and the weird errors that result
@@ -48,7 +50,10 @@ export function createAtomic<s, t>(
     actions: wrapActions(reducers)
   };
 
-  function reducer(state: s, action: AtomicAction<s, t> | StandardAction): s | t {
+  function reducer(
+    state: s,
+    action: AtomicAction<s, t> | StandardAction
+  ): s | t {
     const thisState = state || initialState;
     const params = cleanParams(action && action.payload ? action.payload : []);
     const funcKey = parseActionKeyFromType(reducerName, action.type);
@@ -61,7 +66,10 @@ export function createAtomic<s, t>(
     return atomicFunc ? atomicFunc(thisState) : thisState;
   }
 
-  function wrapStateFunc(params: any[], actionName: string): AtomicAction<s, t> {
+  function wrapStateFunc(
+    params: any[],
+    actionName: string
+  ): AtomicAction<s, t> {
     if (!funcExistsInReducer(reducerFuncs, actionName)) {
       warning(
         `Redux Atomic: Error in wrap() for ${reducerName}! ${actionName} cannot be found. Did you remember to pass it to 'createAtomic()'?`
@@ -77,16 +85,15 @@ export function createAtomic<s, t>(
     const listenerFunc = listenerFuncs.filter(
       (listener: AtomicListenerObj<s, t>) => action.type === listener.type
     )[0];
-    return listenerFunc !== undefined ? listenerFunc.func(state, action) : state;
+    return listenerFunc !== undefined
+      ? listenerFunc.func(state, action)
+      : state;
   }
 
-  function wrapActions<TS extends any[]>(reducers: AtomicFunctionList<s, t>) {
-    let actionList: { [key: string]: (...args: TS) => AtomicAction<s, t> } = {};
-    Object.keys(reducers).forEach(key => {
-      const wrapped: (...args: TS) => AtomicAction<s, t> = wrapper(reducers[key], key);
-      actionList[key] = wrapped;
-    });
-    return actionList;
+  function wrapActions(reducers: AtomicFunctionList<s, t>) {
+    return mapObjIndexed((_, key) => {
+      return wrapper(reducers[key], key);
+    }, reducers);
   }
 
   function wrapper<TS extends any[]>(
@@ -94,7 +101,10 @@ export function createAtomic<s, t>(
     actionName: string
   ): (...args: TS) => AtomicAction<s, t> {
     const funcName = getActionName(reducerName, actionName);
-    if (funcName && checkActionNameExists<s, t>(reducerName, reducerFuncs, funcName)) {
+    if (
+      funcName &&
+      checkActionNameExists<s, t>(reducerName, reducerFuncs, funcName)
+    ) {
       return (...args: TS) => wrapStateFunc(args, funcName);
     } else {
       return (...args: TS) => ({

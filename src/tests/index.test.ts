@@ -1,8 +1,18 @@
 import { createStore } from "redux";
-import { createAtomic, parseActionKeyFromType, AtomicListener, StandardAction } from "../index";
+import {
+  createAtomic,
+  parseActionKeyFromType,
+  AtomicListener,
+  StandardAction
+} from "../index";
 import { niceFunction, ohNo } from "./function";
 
-import { sampleApp, atomic1, atomic1Actions, atomic2Actions } from "./atomicReducerTest";
+import {
+  sampleApp,
+  atomic1,
+  atomic1Actions,
+  atomic2Actions
+} from "./atomicReducerTest";
 import {
   initialState,
   stateMateActions,
@@ -15,7 +25,10 @@ import {
 
 describe("We're testing this approach", () => {
   it("Creates the expected actions", () => {
-    expect(atomic1.actionTypes).toEqual(["atomic1_increment", "atomic1_changeTitle"]);
+    expect(atomic1.actionTypes).toEqual([
+      "atomic1_increment",
+      "atomic1_changeTitle"
+    ]);
   });
 
   it("Changes the state using a function/action thing", () => {
@@ -49,7 +62,11 @@ describe("We're testing this approach", () => {
 
 describe("It creates actions", () => {
   it("Creates the actions", () => {
-    expect(stateMateActionTypes).toEqual(["test_one", "test_two", "test_three"]);
+    expect(stateMateActionTypes).toEqual([
+      "test_one",
+      "test_two",
+      "test_three"
+    ]);
   });
   it("Has created three actions", () => {
     expect(stateMateActions.one).toBeDefined();
@@ -81,7 +98,9 @@ describe("It responds to actions", () => {
     });
   });
   it("Runs action three", () => {
-    expect(stateMateReducer(initialState, stateMateActions.three("hum", "drum", 65))).toEqual({
+    expect(
+      stateMateReducer(initialState, stateMateActions.three("hum", "drum", 65))
+    ).toEqual({
       string: "humdrum",
       number: 65
     });
@@ -93,7 +112,9 @@ describe("It does not confuse reducers", () => {
     expect(parseActionKeyFromType("user", "userAdvanced_hello")).toEqual("");
   });
   it("Does not confuse THIS_NAME_YEAH_hello and THIS_NAME_hello", () => {
-    expect(parseActionKeyFromType("THIS_NAME_YEAH", "THIS_NAME_YEAH_hello")).toEqual("hello");
+    expect(
+      parseActionKeyFromType("THIS_NAME_YEAH", "THIS_NAME_YEAH_hello")
+    ).toEqual("hello");
   });
 });
 
@@ -140,7 +161,10 @@ describe("It allows use of listener functions", () => {
       { niceFunction: niceFunction as any },
       { [SOME_SORT_OF_TYPE]: listener }
     );
-    expect(actionTypes).toEqual(["booListener2_niceFunction", SOME_SORT_OF_TYPE]);
+    expect(actionTypes).toEqual([
+      "booListener2_niceFunction",
+      SOME_SORT_OF_TYPE
+    ]);
   });
 });
 
@@ -169,7 +193,9 @@ describe("It names a function", () => {
   });
 
   it("Throws an error when total nonsense is sent instead of a function", () => {
-    expect(() => createAtomic("boo6", initialState, ["nonsense"] as any)).toThrow();
+    expect(() =>
+      createAtomic("boo6", initialState, ["nonsense"] as any)
+    ).toThrow();
   });
 });
 

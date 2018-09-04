@@ -189,7 +189,7 @@ describe("It names a function", () => {
     };
     expect(actionTypes).toEqual(["boo5_niceFunction", "boo5_ohNo"]);
     // and it still works...
-    expect(boo5Reducer(initialState, action)).toEqual("what");
+    expect(boo5Reducer(initialState, action)).toEqual(initialState);
   });
 
   it("Throws an error when total nonsense is sent instead of a function", () => {

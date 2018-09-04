@@ -120,7 +120,7 @@ describe("It does not confuse reducers", () => {
 
 describe("It does not create actions for non-existant functions", () => {
   it("Does not allow a 'two' action function to be created", () => {
-    const { wrap, reducer } = createAtomic("boo_poo", initialState, { one });
+    const { wrap } = createAtomic("boo_poo", initialState, { one });
     expect(() => wrap(two, "two")).toThrowError();
   });
 });
@@ -134,7 +134,7 @@ describe("It allows use of listener functions", () => {
         text: "hello"
       }
     };
-    const testListener: AtomicListener<StateMate, StateMate> = (
+    const testListener: AtomicListener<StateMate> = (
       state: StateMate,
       action: StandardAction
     ): StateMate => ({
@@ -142,7 +142,7 @@ describe("It allows use of listener functions", () => {
       string: action.payload.text
     });
 
-    const { wrap, reducer } = createAtomic<StateMate, StateMate>(
+    const { reducer } = createAtomic<StateMate>(
       "booListener",
       initialState,
       { one },
@@ -215,8 +215,7 @@ describe("Names in wrap", () => {
 
 describe("It spots multiple reducers with same name", () => {
   it("Throws an error", () => {
-    const localFunction: any = () => "horse";
-    const { actionTypes } = createAtomic("wooo", initialState, {
+    createAtomic("wooo", initialState, {
       niceFunction: niceFunction as any
     });
     expect(() =>

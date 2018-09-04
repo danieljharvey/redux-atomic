@@ -120,7 +120,7 @@ describe("It does not confuse reducers", () => {
 
 describe("It does not create actions for non-existant functions", () => {
   it("Does not allow a 'two' action function to be created", () => {
-    const { wrap, reducer } = createAtomic("boo_poo", initialState, { one });
+    const { wrap } = createAtomic("boo_poo", initialState, { one });
     expect(() => wrap(two, "two")).toThrowError();
   });
 });
@@ -134,7 +134,7 @@ describe("It allows use of listener functions", () => {
         text: "hello"
       }
     };
-    const testListener: AtomicListener<StateMate, StateMate> = (
+    const testListener: AtomicListener<StateMate> = (
       state: StateMate,
       action: StandardAction
     ): StateMate => ({
@@ -142,7 +142,7 @@ describe("It allows use of listener functions", () => {
       string: action.payload.text
     });
 
-    const { wrap, reducer } = createAtomic<StateMate, StateMate>(
+    const { reducer } = createAtomic<StateMate>(
       "booListener",
       initialState,
       { one },
@@ -189,7 +189,7 @@ describe("It names a function", () => {
     };
     expect(actionTypes).toEqual(["boo5_niceFunction", "boo5_ohNo"]);
     // and it still works...
-    expect(boo5Reducer(initialState, action)).toEqual("what");
+    expect(boo5Reducer(initialState, action)).toEqual(initialState);
   });
 
   it("Throws an error when total nonsense is sent instead of a function", () => {
@@ -203,20 +203,19 @@ describe("Names in wrap", () => {
   it("Doesn't errors when using named anonymous function", () => {
     const { wrap } = createAtomic("boo8", initialState, { ohNo: ohNo as any });
 
-    wrap(ohNo, "ohNo");
+    wrap(ohNo as any, "ohNo");
     expect(true).toBeTruthy();
   });
 
   it("Errors when using a name that has not been used in the reducer", () => {
     const { wrap } = createAtomic("boo9", initialState, { ohNo: ohNo as any });
-    expect(() => wrap(ohNo, "ohNo2")).toThrow();
+    expect(() => wrap(ohNo as any, "ohNo2")).toThrow();
   });
 });
 
 describe("It spots multiple reducers with same name", () => {
   it("Throws an error", () => {
-    const localFunction: any = () => "horse";
-    const { actionTypes } = createAtomic("wooo", initialState, {
+    createAtomic("wooo", initialState, {
       niceFunction: niceFunction as any
     });
     expect(() =>

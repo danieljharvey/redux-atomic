@@ -2,6 +2,6 @@ export function niceFunction() {
   return "nice";
 }
 
-export const ohNo = () => () => {
-  return "what";
+export const ohNo = <A>() => (a: A) => {
+  return a;
 };

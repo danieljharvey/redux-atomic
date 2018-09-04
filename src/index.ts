@@ -30,7 +30,7 @@ import {
 // and the weird errors that result
 let allNames: string[] = [];
 
-export function createAtomic<s, t>(
+export function createAtomic<s, t = s>(
   reducerName: string,
   initialState: s,
   reducers: AtomicFunctionList<s, t>,

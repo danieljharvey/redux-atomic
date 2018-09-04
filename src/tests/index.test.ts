@@ -203,13 +203,13 @@ describe("Names in wrap", () => {
   it("Doesn't errors when using named anonymous function", () => {
     const { wrap } = createAtomic("boo8", initialState, { ohNo: ohNo as any });
 
-    wrap(ohNo, "ohNo");
+    wrap(ohNo as any, "ohNo");
     expect(true).toBeTruthy();
   });
 
   it("Errors when using a name that has not been used in the reducer", () => {
     const { wrap } = createAtomic("boo9", initialState, { ohNo: ohNo as any });
-    expect(() => wrap(ohNo, "ohNo2")).toThrow();
+    expect(() => wrap(ohNo as any, "ohNo2")).toThrow();
   });
 });
 
